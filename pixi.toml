@@ -1,0 +1,83 @@
+[workspace]
+name = "zotero-rag-assistant"
+version = "0.1.0"
+description = "RAG system for scientific papers using Claude API and local embeddings"
+authors = ["AesZenz <your.email@example.com>"]
+channels = ["conda-forge"]
+platforms = ["osx-64", "osx-arm64"]
+
+[dependencies]
+python = ">=3.10,<3.13"
+pip = "*"
+
+[pypi-dependencies]
+# PDF Processing
+pypdf = ">=4.0.0"
+pymupdf = ">=1.23.0"
+pdfplumber = ">=0.10.0"
+
+# Text Processing & Chunking
+langchain = ">=0.1.0"
+langchain-community = ">=0.0.20"
+tiktoken = ">=0.5.0"
+
+# Embeddings (Local)
+sentence-transformers = ">=2.3.0,<2.4.0"
+torch = ">=2.1.0"
+
+# Vector Store
+faiss-cpu = ">=1.7.4"
+chromadb = ">=0.4.22"
+
+# Claude API
+anthropic = ">=0.18.0"
+
+# Environment & Config
+python-dotenv = ">=1.0.0"
+pydantic = ">=2.5.0"
+pydantic-settings = ">=2.1.0"
+
+# CLI & Progress
+rich = ">=13.7.0"
+click = ">=8.1.0"
+tqdm = ">=4.66.0"
+
+# Data Handling
+pandas = ">=2.1.0"
+numpy = ">=1.24.0,<2.0.0"
+
+# Evaluation & Metrics
+scikit-learn = ">=1.3.0"
+nltk = ">=3.8.0"
+
+# Development & Testing
+pytest = ">=7.4.0"
+pytest-cov = ">=4.1.0"
+black = ">=23.12.0"
+ruff = ">=0.1.9"
+ipython = ">=8.18.0"
+ipykernel = ">=6.27.0"
+
+# Jupyter for notebooks
+jupyter = ">=1.0.0"
+jupyterlab = ">=4.0.0"
+matplotlib = ">=3.8.0"
+seaborn = ">=0.13.0"
+
+[tasks]
+setup = "python -c 'import nltk; nltk.download(\"punkt\"); nltk.download(\"stopwords\")'"
+ingest = "PYTHONPATH=. python scripts/ingest_papers.py"
+query = "PYTHONPATH=. python scripts/query_assistant.py"
+evaluate = "PYTHONPATH=. python scripts/run_evaluation.py"
+format = "black src/ scripts/ tests/"
+lint = "ruff check src/ scripts/ tests/"
+test = "PYTHONPATH=. pytest tests/ -v --cov=src --cov-report=html"
+test-parser = "PYTHONPATH=. python scripts/test_pdf_parser.py"
+test-chunker = "PYTHONPATH=. python scripts/test_chunker.py"
+test-embedder = "PYTHONPATH=. python scripts/test_embedder.py"
+test-vector-store = "PYTHONPATH=. python scripts/test_vector_store.py"
+notebook = "jupyter lab notebooks/"
+check = { depends-on = ["format", "lint", "test"] }
+
+[environments]
+default = { solve-group = "default" }
