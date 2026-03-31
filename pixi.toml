@@ -67,6 +67,7 @@ seaborn = ">=0.13.0"
 [tasks]
 setup = "python -c 'import nltk; nltk.download(\"punkt\"); nltk.download(\"stopwords\")'"
 ingest = "PYTHONPATH=. python scripts/ingest_papers.py"
+ingest-library = "PYTHONPATH=. python scripts/ingest_papers.py"
 query = "PYTHONPATH=. python scripts/query_assistant.py"
 evaluate = "PYTHONPATH=. python scripts/run_evaluation.py"
 format = "black src/ scripts/ tests/"

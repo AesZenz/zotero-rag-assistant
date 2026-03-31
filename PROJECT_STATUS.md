@@ -1,6 +1,9 @@
 # Project Status
 
 ## Update Log
+- 2026-03-31 — ran bulk ingestion over full 600-paper library; confirmed index built successfully; ran first end-to-end query against the full index: clinical question about efficacy of mindfulness interventions for ADHD executive function symptoms — system returned relevant chunks and a coherent cited answer; full RAG pipeline confirmed working at scale
+- 2026-03-29 — built bulk ingestion script (`scripts/ingest_papers.py`): walks PDF library recursively, runs full parse→chunk→filter→embed→FAISS pipeline, buffers chunks across papers and embeds in bulk batches, checkpoints every 50 papers, `--resume` flag skips already-indexed files by filename, end-of-run summary (processed/failed/chunk counts/embed time/index size); added `ingest-library` pixi task; **not yet tested against full library** — also: repo documentation pass (README rewrite, model name fixes, PYTHONPATH fix, pushed to GitHub)
+- 2026-03-29 — repo documentation pass: rewrote `README.md` to reflect actual project state (component status table, known limitations, accurate setup/query commands); fixed incorrect model ID (`claude-sonnet-4-20250514` → `claude-sonnet-4-6`) in `README.md` and `.env.example`; added `PYTHONPATH=.` to direct `python` invocations in README (needed outside of `pixi run`); committed and pushed to GitHub; confirmed end-to-end pipeline works up to generation layer (retrieval returns correct chunks); generation currently blocked by insufficient Anthropic API credits
 - 2026-03-27 — built generation layer (`src/generation/claude_client.py`): `ClaudeGenerator` class wrapping the Anthropic SDK with non-streaming `generate_answer()` and streaming `stream_answer()` methods; structured RAG prompt (system + numbered context chunks + citation instruction + "I don't have enough information" fallback); model-prefix pricing table for cost calculation; typed error handling for rate limits, bad requests, and network failures; added `scripts/test_claude_generation.py` (load index → embed → retrieve → generate → print) and `scripts/query_assistant.py` (full CLI with single-shot and interactive REPL modes, streaming display, per-query and session cost tracking)
 - 2026-03-24 — fixed metadata key mismatch (`extract_metadata()` now returns `"pdf_title"` instead of `"title"`); fixed pixi.toml deprecation warnings (`[project]` → `[workspace]`, `depends_on` → `depends-on`); diagnosed and fixed PyTorch segfault on osx-64 Intel Mac (`OMP_NUM_THREADS=1` env var in test script — PyTorch 2.2.2 OpenMP threading bug); built noise filter (`src/ingestion/noise_filter.py`) with chunk-level signal detection for reference lists, author affiliations, funding acknowledgments, and journal headers — confirmed working on Flynn effect paper (23/51 chunks correctly identified as noise, all verified as legitimate drops)
 - 2026-03-23 — fixed datetime JSON serialization in `FAISSVectorStore.save()` (added `default` serializer converting `datetime` to isoformat); suppressed HuggingFace tokenizer parallelism warning in `scripts/test_vector_store.py` via `TOKENIZERS_PARALLELISM=false`
@@ -22,7 +25,7 @@
 - **PDF library**: 1.3GB, ~600 psychology/neuroscience/AI papers exported from Zotero (with RDF metadata)
 
 ## Current State
-The ingestion, retrieval, and generation layers are all complete. The full RAG pipeline works end-to-end: parse PDF → chunk (512 tokens, 50 overlap) → noise-filter → embed with `all-mpnet-base-v2` → FAISS index → cosine similarity search → Claude answer with chunk citations. `scripts/query_assistant.py` is a working CLI that can answer questions against the saved index, streaming Claude's response token-by-token and reporting per-query cost. What's still missing: a bulk ingestion script to process the full 600-paper library (currently only the Flynn effect paper is indexed), an evaluation module, and pytest unit tests.
+All core pipeline components are complete and confirmed working at scale. The full RAG pipeline runs end-to-end: parse PDF → chunk (512 tokens, 50 overlap) → noise-filter → embed with `all-mpnet-base-v2` → FAISS index → cosine similarity search → Claude answer with chunk citations. The full 600-paper library has been ingested and the system has been validated with a real clinical query (mindfulness interventions for ADHD executive function). `scripts/query_assistant.py` streams Claude's response token-by-token and reports per-query cost. What's still missing: an evaluation module and pytest unit tests.
 
 ## Dependency Resolutions
 - **`sentence-transformers = ">=2.3.0,<2.4.0"`** — 2.2.x was broken because it imports `cached_download` from `huggingface_hub`, which was removed in newer versions of that library (installed: 0.36.2). 2.3.x dropped that import. Upper bound `<2.4.0` chosen for stability.
@@ -43,7 +46,7 @@ The ingestion, retrieval, and generation layers are all complete. The full RAG p
 ## Known Issues / Tech Debt
 - ~~**PDF parser noise**~~ — resolved: `src/ingestion/noise_filter.py` built and confirmed working; pipeline is now parse→chunk→filter→embed
 - ~~**Metadata key mismatch bug**~~ — resolved: `extract_metadata()` now returns `"pdf_title"`
-- **Missing entry-point scripts**: `scripts/ingest_papers.py` and `scripts/run_evaluation.py` are referenced in `pixi.toml` tasks but don't exist — `pixi run ingest` will fail
+- **`scripts/ingest_papers.py` complete and tested** — run against full 600-paper library; index confirmed working (first query returned correct results); `scripts/run_evaluation.py` still missing (`pixi run evaluate` will fail)
 - ~~**`scripts/query_assistant.py` missing**~~ — resolved: built with streaming REPL and single-shot modes
 - ~~**No vector store implementation**~~ — resolved: `src/retrieval/vector_store.py` built and tested
 - **No GitHub repo**: project is local-only, no remote tracking; needs a GitHub repo created and initial push
@@ -54,10 +57,9 @@ The ingestion, retrieval, and generation layers are all complete. The full RAG p
 - **`pdfplumber` installed but unused**: PyMuPDF was chosen but pdfplumber remains as dead weight
 
 ## Next Steps (ordered)
-1. **Build `scripts/ingest_papers.py`** — walk the full 600-paper PDF library, run parse→chunk→filter→embed pipeline, persist a single FAISS index covering all papers; needs idempotency design (skip already-processed files)
-2. **Add Pydantic settings** — centralize all env var reads into one `Settings` class with validation
-3. **Implement evaluation** (`src/evaluation/`) — question generation + retrieval/answer quality metrics using the existing `scikit-learn`/`nltk` deps
-4. **Write pytest test suite** — unit tests for parser, chunker, embedder, vector store; integration test for full pipeline on known PDF
+1. **Add Pydantic settings** — centralize all env var reads into one `Settings` class with validation
+2. **Implement evaluation** (`src/evaluation/`) — question generation + retrieval/answer quality metrics using the existing `scikit-learn`/`nltk` deps
+3. **Write pytest test suite** — unit tests for parser, chunker, embedder, vector store; integration test for full pipeline on known PDF
 
 ## Concepts Learned So Far
 - **RAG pipeline**: All four stages built and working end-to-end — ingest (parse→chunk→filter→embed), index (FAISS), retrieve (cosine similarity search), generate (Claude with context + citation prompt)
@@ -74,7 +76,8 @@ The ingestion, retrieval, and generation layers are all complete. The full RAG p
 - **Zotero RDF metadata**: The library has a `Psy:Neuroscience:AI.rdf` file with rich Zotero metadata (tags, collections, notes) — should this be used to enrich chunk metadata, or just rely on PDF-extracted metadata?
 - **cl100k_base for Claude**: Using OpenAI's tokenizer for chunking, but the generation model is Claude (different tokenizer) — does this create a mismatch for context window calculations?
 - ~~**`all-mpnet-base-v2` embedding dim**~~ — resolved: 768, confirmed, `IndexFlatIP(768)` built and tested
-- **Ingestion idempotency**: If `ingest_papers.py` is run twice, will it re-embed all papers or skip already-processed ones? Design not decided.
+- ~~**Ingestion idempotency (crash recovery)**~~ — resolved via `--resume` flag.
+- **Ingestion idempotency (naive re-run)**: running without `--resume` silently duplicates all vectors in the index. No guard implemented.
 - **HTML files in library**: Some Zotero exports are `.html` web snapshots, not PDFs — the current parser only handles PDFs; these will be silently skipped or error
 
 ## Cost Tracking

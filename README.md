@@ -72,7 +72,7 @@ All layers are independently testable. The pipeline was built one component at a
 | FAISS vector store | `src/retrieval/vector_store.py` | ✅ complete |
 | Claude generation layer | `src/generation/claude_client.py` | ✅ complete |
 | Query CLI | `scripts/query_assistant.py` | ✅ complete |
-| Bulk ingestion script | `scripts/ingest_papers.py` | 🔲 next |
+| Bulk ingestion script | `scripts/ingest_papers.py` | ✅ complete |
 | Evaluation module | `src/evaluation/` | 🔲 planned |
 | Pytest test suite | `tests/` | 🔲 planned |
 
@@ -92,11 +92,15 @@ cp .env.example .env
 pixi install
 ```
 
-### Ingest a single paper (current)
+### Ingest the full library
 ```bash
-OMP_NUM_THREADS=1 PYTHONPATH=. python scripts/test_vector_store.py
+# Full run
+PYTHONPATH=. python scripts/ingest_papers.py
+
+# Resume an interrupted run (skips already-indexed papers)
+PYTHONPATH=. python scripts/ingest_papers.py --resume
 ```
-> Note: `OMP_NUM_THREADS=1` is required on Intel Mac to prevent a PyTorch 2.2.x OpenMP threading bug.
+> Note: `OMP_NUM_THREADS=1` is set automatically inside the script to prevent a PyTorch 2.2.x OpenMP threading bug on Intel Mac.
 
 ### Query
 ```bash
@@ -140,7 +144,6 @@ USE_LOCAL_EMBEDDINGS=true
 
 ## Planned: Phase 2
 
-- **Bulk ingestion** (`scripts/ingest_papers.py`) — idempotent pipeline over the full 600-paper library
 - **Evaluation layer** — retrieval precision/recall + answer faithfulness metrics (RAGAS)
 - **Pydantic settings** — centralize 17 env vars into a validated `Settings` class
 - **Reranking** — cross-encoder reranking post-retrieval for higher precision
@@ -151,7 +154,5 @@ USE_LOCAL_EMBEDDINGS=true
 
 ## Known Limitations
 
-- `pixi run ingest` currently fails — `scripts/ingest_papers.py` not yet built
-- Only one paper indexed so far (Flynn effect meta-analysis used for testing)
 - HTML web snapshots in Zotero exports are silently skipped (PDF parser only)
 - No pytest suite yet — testing is currently ad-hoc smoke scripts per component

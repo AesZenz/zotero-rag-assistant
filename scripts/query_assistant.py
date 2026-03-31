@@ -35,7 +35,7 @@ from src.generation.claude_client import ClaudeGenerator
 # Defaults
 # ---------------------------------------------------------------------------
 
-DEFAULT_INDEX = "data/test_index.faiss"
+DEFAULT_INDEX = "data/paper_index.faiss"
 DEFAULT_TOP_K = 5
 DEFAULT_MAX_TOKENS = int(os.getenv("MAX_TOKENS_PER_RESPONSE", "500"))
 
@@ -200,6 +200,7 @@ def main() -> None:
         return
 
     # ---- Interactive REPL ----
+    # REPL = Read-Eval-Print-Loop
     print()
     print(GREEN("Zotero RAG Assistant — interactive mode"))
     print(DIM('Type a question and press Enter. Type "exit" or Ctrl-D to quit.'))
