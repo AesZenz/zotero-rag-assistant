@@ -9,10 +9,10 @@ A retrieval-augmented generation (RAG) system for querying a personal Zotero res
 Ask a question in natural language → the system retrieves the most relevant passages from your PDF library → Claude answers using only that context, with numbered citations back to the source chunks.
 
 ```
-$ python scripts/query_assistant.py "What does the literature say about working memory and fluid intelligence?"
+$ pixi run query "What does the literature say about working memory and fluid intelligence?"
 
 [streaming answer with chunk citations]
-Cost: $0.012 | Tokens: 410
+[claude-sonnet-4-6 · 412 tokens · $0.012345]
 ```
 
 ---
@@ -38,7 +38,9 @@ embedder.py         all-mpnet-base-v2 (768-dim), CPU-only, batch inference
 vector_store.py     FAISS IndexFlatIP, L2-normalised cosine similarity
     │
     ▼
-claude_client.py    RAG prompt → Claude API → streamed answer + cost tracking
+generator.py        backend selector (GENERATION_BACKEND env var)
+    │               ├── claude_client.py   → Anthropic API, cost tracked per query
+    │               └── ollama_client.py   → local Ollama HTTP API, free
 ```
 
 All layers are independently testable. The pipeline was built one component at a time, with each stage confirmed working before moving to the next.
@@ -71,6 +73,8 @@ All layers are independently testable. The pipeline was built one component at a
 | Embedder | `src/ingestion/embedder.py` | ✅ complete |
 | FAISS vector store | `src/retrieval/vector_store.py` | ✅ complete |
 | Claude generation layer | `src/generation/claude_client.py` | ✅ complete |
+| Ollama generation layer | `src/generation/ollama_client.py` | ✅ complete |
+| Backend selector | `src/generation/generator.py` | ✅ complete |
 | Query CLI | `scripts/query_assistant.py` | ✅ complete |
 | Bulk ingestion script | `scripts/ingest_papers.py` | ✅ complete |
 | Evaluation module | `src/evaluation/` | 🔲 planned |
@@ -95,23 +99,27 @@ pixi install
 ### Ingest the full library
 ```bash
 # Full run
-PYTHONPATH=. python scripts/ingest_papers.py
+pixi run ingest-library
 
 # Resume an interrupted run (skips already-indexed papers)
-PYTHONPATH=. python scripts/ingest_papers.py --resume
+pixi run ingest-library -- --resume
 ```
 > Note: `OMP_NUM_THREADS=1` is set automatically inside the script to prevent a PyTorch 2.2.x OpenMP threading bug on Intel Mac.
 
 ### Query
 ```bash
-# Single question
-PYTHONPATH=. python scripts/query_assistant.py "your question here"
+# Single question (Claude)
+pixi run query "your question here"
 
-# Interactive REPL
-PYTHONPATH=. python scripts/query_assistant.py
+# Interactive REPL (Claude)
+pixi run query
 
-# Options
-PYTHONPATH=. python scripts/query_assistant.py --top-k 8 --max-tokens 600 --verbose "your question"
+# Use the local Ollama backend instead (requires `ollama serve`)
+pixi run query-ollama "your question here"
+pixi run query-ollama
+
+# Pass additional options via -- separator
+pixi run query -- --top-k 8 --max-tokens 600 --verbose "your question"
 ```
 
 ---

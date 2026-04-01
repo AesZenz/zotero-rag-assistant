@@ -18,8 +18,11 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+import time
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 
@@ -29,7 +32,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 from src.ingestion.embedder import SentenceTransformerEmbedder
 from src.retrieval.vector_store import FAISSVectorStore
-from src.generation.claude_client import ClaudeGenerator
+from src.generation.generator import get_generator
 
 # ---------------------------------------------------------------------------
 # Defaults
@@ -38,6 +41,9 @@ from src.generation.claude_client import ClaudeGenerator
 DEFAULT_INDEX = "data/paper_index.faiss"
 DEFAULT_TOP_K = 5
 DEFAULT_MAX_TOKENS = int(os.getenv("MAX_TOKENS_PER_RESPONSE", "500"))
+
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_LOG_PATH = os.path.join(_PROJECT_ROOT, "data", "query_logs", "query_log.jsonl")
 
 # ANSI helpers (disabled automatically when stdout is not a TTY)
 _USE_COLOR = sys.stdout.isatty() 
@@ -51,6 +57,43 @@ DIM    = lambda t: _c("2", t)
 CYAN   = lambda t: _c("36", t)
 GREEN  = lambda t: _c("32", t)
 YELLOW = lambda t: _c("33", t)
+
+
+# ---------------------------------------------------------------------------
+# Query logging
+# ---------------------------------------------------------------------------
+
+def _log_query(
+    query: str,
+    model: str,
+    chunks: list[dict],
+    answer: str,
+    latency_seconds: float,
+    cost_usd: float | None,
+) -> None:
+    """Append one JSON line to the query log. Silently skips on write errors."""
+    entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "query": query,
+        "model": model,
+        "retrieved_chunks": [
+            {
+                "filename": c.get("source") or c.get("pdf_title") or "Unknown",
+                "chunk_index": c.get("chunk_id"),
+                "score": c.get("score"),
+            }
+            for c in chunks
+        ],
+        "answer": answer,
+        "latency_seconds": round(latency_seconds, 3),
+        "cost_usd": cost_usd,
+    }
+    try:
+        os.makedirs(os.path.dirname(_LOG_PATH), exist_ok=True)
+        with open(_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        pass  # logging failure must never interrupt the user
 
 
 # ---------------------------------------------------------------------------
@@ -96,11 +139,14 @@ def run_query(
 
     total_input_tokens = 0
     total_output_tokens = 0
+    answer_parts: list[str] = []
+    t0 = time.monotonic()
 
     try:
         with generator.stream_answer(question, results, max_tokens=max_tokens) as stream:
             for text in stream.text_stream:
                 print(text, end="", flush=True)
+                answer_parts.append(text)
             final = stream.get_final_message()
 
         total_input_tokens = final.usage.input_tokens
@@ -112,14 +158,18 @@ def run_query(
         return
 
     # 5. Cost summary
+    latency = time.monotonic() - t0
     cost = generator._calculate_cost(total_input_tokens, total_output_tokens)
+    is_local = os.getenv("GENERATION_BACKEND", "claude").strip().lower() == "ollama"
+    cost_str = "free (local)" if is_local else f"${cost:.6f}"
+    _log_query(question, generator.model, results, "".join(answer_parts), latency, None if is_local else cost)
     print()
     print()
     print(
         DIM(
             f"[{generator.model} · "
             f"{total_input_tokens + total_output_tokens:,} tokens · "
-            f"${cost:.6f}]"
+            f"{cost_str}]"
         )
     )
 
@@ -180,8 +230,9 @@ def main() -> None:
     embedder = SentenceTransformerEmbedder()
     print(DIM(f"Embedder ready ({embedder.model_name})"))
 
-    print(DIM("Initialising Claude generator…"))
-    generator = ClaudeGenerator()
+    backend = os.getenv("GENERATION_BACKEND", "claude").strip().lower()
+    print(DIM(f"Initialising {backend} generator…"))
+    generator = get_generator()
     print(DIM(f"Generator ready ({generator.model})"))
 
     # ---- Single-shot mode ----
@@ -244,15 +295,26 @@ def main() -> None:
         print(BOLD("Answer:"))
 
         try:
+            repl_answer_parts: list[str] = []
+            t0 = time.monotonic()
             with generator.stream_answer(question, results, max_tokens=args.max_tokens) as stream:
                 for text in stream.text_stream:
                     print(text, end="", flush=True)
+                    repl_answer_parts.append(text)
                 final = stream.get_final_message()
+            repl_latency = time.monotonic() - t0
 
             in_tok = final.usage.input_tokens
             out_tok = final.usage.output_tokens
             cost = generator._calculate_cost(in_tok, out_tok)
             session_cost += cost
+
+            is_local = os.getenv("GENERATION_BACKEND", "claude").strip().lower() == "ollama"
+            _log_query(question, generator.model, results, "".join(repl_answer_parts), repl_latency, None if is_local else cost)
+            if is_local:
+                cost_line = "free (local)"
+            else:
+                cost_line = f"${cost:.6f} this query · ${session_cost:.6f} session total"
 
             print()
             print()
@@ -260,8 +322,7 @@ def main() -> None:
                 DIM(
                     f"[{generator.model} · "
                     f"{in_tok + out_tok:,} tokens · "
-                    f"${cost:.6f} this query · "
-                    f"${session_cost:.6f} session total]"
+                    f"{cost_line}]"
                 )
             )
 
@@ -271,7 +332,9 @@ def main() -> None:
 
         print()
 
-    print(DIM(f"Session cost: ${session_cost:.6f}"))
+    is_local = os.getenv("GENERATION_BACKEND", "claude").strip().lower() == "ollama"
+    session_summary = "Session cost: free (local)" if is_local else f"Session cost: ${session_cost:.6f}"
+    print(DIM(session_summary))
     print(GREEN("Goodbye!"))
 
 
