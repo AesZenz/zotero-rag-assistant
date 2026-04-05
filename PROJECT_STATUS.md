@@ -1,6 +1,13 @@
 # Project Status
 
 ## Update Log
+- 2026-04-06 — built evaluation layer (`src/evaluation/`); **not yet tested**
+  - **`src/evaluation/question_generator.py`**: `generate_questions_from_chunks(chunks, n_questions, api_key, model)` — randomly samples chunks from `store._metadata`, calls `claude-haiku-4-5-20251001` once per chunk (max_tokens=200) to generate one self-contained research question, saves to `data/eval/eval_questions.jsonl`; CLI with `--n` and `--index-path` flags; pixi task: `generate-eval-questions`
+  - **`src/evaluation/retrieval_metrics.py`**: `evaluate_retrieval(eval_questions, vector_store, embedder, top_k)` — embeds each question, searches FAISS, checks if source chunk (matched by `source_file` + `chunk_id`) appears in top-K; computes Precision@K, Recall@K (hit rate), and MRR; no LLM calls, fully deterministic; returns summary dict + per-question detail rows
+  - **`src/evaluation/ragas_evaluator.py`**: `evaluate_answers(eval_questions, vector_store, embedder, generator, top_k)` — retrieves chunks, generates answer via `generator.generate_answer()`, scores with RAGAS if installed, otherwise falls back to Claude-as-judge faithfulness scoring (0–1, `claude-haiku-4-5-20251001`, max_tokens=64); RAGAS path also computes answer_relevancy and context_precision
+  - **`scripts/run_evaluation.py`**: orchestrator — loads `eval_questions.jsonl`, runs retrieval evaluation, prints summary table; `--full` flag enables answer quality evaluation (incurs LLM cost); saves timestamped results to `data/eval/eval_results_{timestamp}.jsonl`; pixi task: `evaluate`
+  - **`pixi.toml`**: added `generate-eval-questions` task; `evaluate` task already existed (unchanged)
+  - **Ollama query logging resolved**: root cause was the Ollama streaming timeout — prior to the `(10, None)` fix, the stream was failing before `_log_query` was ever reached; confirmed working correctly after fix
 - 2026-04-02 — added local LLM backend (Ollama) alongside Claude API; added query logging; multiple bug fixes (details below)
   - **`src/generation/ollama_client.py`**: `OllamaClient` class with interface identical to `ClaudeGenerator` — same `generate_answer()`, `stream_answer()`, `_calculate_cost()` signatures; uses Ollama's OpenAI-compatible HTTP endpoint (`http://localhost:11434/v1`) via `requests`; `_OllamaStream` context manager mirrors `anthropic.MessageStream` shape so `query_assistant.py` needs no backend-conditional logic; `health_check()` hits `/api/tags` and returns bool; `cost_usd` always 0.0; reads `OLLAMA_MODEL` from env (default: `phi4-mini`); both models confirmed downloaded: `llama3.2:3b` (2.0GB) and `phi4-mini:latest` (2.5GB)
   - **`src/generation/generator.py`**: `get_generator()` factory reads `GENERATION_BACKEND` env var (`claude` or `ollama`, default: `claude`); runs `health_check()` for Ollama and raises `RuntimeError` with setup instructions if server not reachable
@@ -34,10 +41,16 @@
 - **Generation backend selector** (`src/generation/generator.py`): `get_generator()` reads `GENERATION_BACKEND` env var and returns the appropriate client; validates Ollama availability via `health_check()` before returning
 - **Test scripts** (`scripts/test_pdf_parser.py`, `test_chunker.py`, `test_embedder.py`, `test_vector_store.py`, `test_claude_generation.py`): Ad-hoc smoke tests for each stage — ingestion confirmed working; vector store test covers full parse→chunk→filter→embed→index→search→save→load round-trip; generation test loads saved index and runs end-to-end query through Claude
 - **Query CLI** (`scripts/query_assistant.py`): `python scripts/query_assistant.py "question"` for single-shot; bare invocation for interactive REPL; `--index`, `--top-k`, `--max-tokens`, `--verbose` flags; answers stream token-by-token; per-query and session-total cost printed after each answer
+- **Bulk ingestion script** (`scripts/ingest_papers.py`): walks PDF library recursively, full parse→chunk→filter→embed→FAISS pipeline, bulk embedding batches, checkpoint every 50 papers, `--resume` flag; confirmed working against full 600-paper library
+- **Evaluation layer** (`src/evaluation/`) — built, **not yet tested**:
+  - `question_generator.py`: Claude-powered question generation from sampled index chunks → `data/eval/eval_questions.jsonl`
+  - `retrieval_metrics.py`: deterministic Precision@K / Recall@K / MRR computation against labelled questions
+  - `ragas_evaluator.py`: answer faithfulness scoring via RAGAS (if installed) or Claude-as-judge fallback
+  - `scripts/run_evaluation.py`: orchestrator with `--full` flag for optional answer quality evaluation
 - **PDF library**: 1.3GB, ~600 psychology/neuroscience/AI papers exported from Zotero (with RDF metadata)
 
 ## Current State
-All core pipeline components are complete and confirmed working at scale. The full RAG pipeline runs end-to-end: parse PDF → chunk (512 tokens, 50 overlap) → noise-filter → embed with `all-mpnet-base-v2` → FAISS index → cosine similarity search → Claude answer with chunk citations. The full 600-paper library has been ingested and the system has been validated with a real clinical query (mindfulness interventions for ADHD executive function). `scripts/query_assistant.py` streams Claude's response token-by-token and reports per-query cost. What's still missing: an evaluation module and pytest unit tests.
+All core pipeline components are complete and confirmed working at scale. The full RAG pipeline runs end-to-end: parse PDF → chunk (512 tokens, 50 overlap) → noise-filter → embed with `all-mpnet-base-v2` → FAISS index → cosine similarity search → generation (Claude or local Ollama) with chunk citations. Two local Ollama models are available (`llama3.2:3b`, `phi4-mini`). Query logging writes to `data/query_logs/query_log.jsonl`. The evaluation layer has been built but not yet tested. What's still missing: pytest unit tests.
 
 ## Dependency Resolutions
 - **`sentence-transformers = ">=2.3.0,<2.4.0"`** — 2.2.x was broken because it imports `cached_download` from `huggingface_hub`, which was removed in newer versions of that library (installed: 0.36.2). 2.3.x dropped that import. Upper bound `<2.4.0` chosen for stability.
@@ -58,11 +71,10 @@ All core pipeline components are complete and confirmed working at scale. The fu
 ## Known Issues / Tech Debt
 - ~~**PDF parser noise**~~ — resolved: `src/ingestion/noise_filter.py` built and confirmed working; pipeline is now parse→chunk→filter→embed
 - ~~**Metadata key mismatch bug**~~ — resolved: `extract_metadata()` now returns `"pdf_title"`
-- **`scripts/ingest_papers.py` complete and tested** — run against full 600-paper library; index confirmed working (first query returned correct results); `scripts/run_evaluation.py` still missing (`pixi run evaluate` will fail)
-- **Ollama query logging unresolved** — Claude logging confirmed working; Ollama logging silently produces no log entry; root cause unknown (likely `except OSError: pass` being too narrow — any non-OSError exception from `json.dumps` escapes the handler); fix: broaden to `except Exception` and add `default=str` to `json.dumps`
+- **Evaluation layer untested** — all four files written and committed; `pixi run generate-eval-questions` and `pixi run evaluate` have not been run yet; correctness of chunk matching logic (`source_file` + `chunk_id`) and RAGAS fallback unverified
 - ~~**`scripts/query_assistant.py` missing**~~ — resolved: built with streaming REPL and single-shot modes
 - ~~**No vector store implementation**~~ — resolved: `src/retrieval/vector_store.py` built and tested
-- **No GitHub repo**: project is local-only, no remote tracking; needs a GitHub repo created and initial push
+- ~~**No GitHub repo**~~ — resolved: pushed to https://github.com/AesZenz/zotero-rag-assistant
 - **No tests directory**: pytest + pytest-cov configured in pixi.toml but `tests/` doesn't exist; test coverage is 0%
 - **Hardcoded batch size**: `32` appears in two separate places in `embedder.py` (lines 105 and 159) — must be kept in sync manually
 - **No config management layer**: 17 env vars read ad-hoc; `pydantic-settings` is installed but unused — no validation, no central config object
@@ -70,9 +82,9 @@ All core pipeline components are complete and confirmed working at scale. The fu
 - **`pdfplumber` installed but unused**: PyMuPDF was chosen but pdfplumber remains as dead weight
 
 ## Next Steps (ordered)
-1. **Add Pydantic settings** — centralize all env var reads into one `Settings` class with validation
-2. **Implement evaluation** (`src/evaluation/`) — question generation + retrieval/answer quality metrics using the existing `scikit-learn`/`nltk` deps
-3. **Write pytest test suite** — unit tests for parser, chunker, embedder, vector store; integration test for full pipeline on known PDF
+1. **Test evaluation layer** — run `pixi run generate-eval-questions -- --n 20`, then `pixi run evaluate`; verify chunk matching and metric output
+2. **Write pytest test suite** — unit tests for parser, chunker, embedder, vector store; integration test for full pipeline on known PDF
+3. **Add Pydantic settings** — centralize all env var reads into one `Settings` class with validation
 
 ## Concepts Learned So Far
 - **RAG pipeline**: All four stages built and working end-to-end — ingest (parse→chunk→filter→embed), index (FAISS), retrieve (cosine similarity search), generate (Claude with context + citation prompt)

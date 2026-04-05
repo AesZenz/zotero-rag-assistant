@@ -77,7 +77,7 @@ All layers are independently testable. The pipeline was built one component at a
 | Backend selector | `src/generation/generator.py` | ✅ complete |
 | Query CLI | `scripts/query_assistant.py` | ✅ complete |
 | Bulk ingestion script | `scripts/ingest_papers.py` | ✅ complete |
-| Evaluation module | `src/evaluation/` | 🔲 planned |
+| Evaluation module | `src/evaluation/` | ⚠️ built, not yet tested |
 | Pytest test suite | `tests/` | 🔲 planned |
 
 ---
@@ -130,6 +130,8 @@ pixi run query -- --top-k 8 --max-tokens 600 --verbose "your question"
 # .env
 ANTHROPIC_API_KEY=your-key-here
 CLAUDE_MODEL=claude-sonnet-4-6
+GENERATION_BACKEND=claude        # or 'ollama' for local inference
+OLLAMA_MODEL=llama3.2:3b         # only used when GENERATION_BACKEND=ollama
 PDF_LIBRARY_PATH=/path/to/zotero/folder
 CHUNK_SIZE=512
 CHUNK_OVERLAP=50
@@ -152,7 +154,6 @@ USE_LOCAL_EMBEDDINGS=true
 
 ## Planned: Phase 2
 
-- **Evaluation layer** — retrieval precision/recall + answer faithfulness metrics (RAGAS)
 - **Pydantic settings** — centralize 17 env vars into a validated `Settings` class
 - **Reranking** — cross-encoder reranking post-retrieval for higher precision
 - **Zotero RDF metadata** — enrich chunk metadata with Zotero tags, collections, and notes
