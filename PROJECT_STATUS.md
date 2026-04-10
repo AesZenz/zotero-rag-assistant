@@ -1,6 +1,16 @@
 # Project Status
 
 ## Update Log
+- 2026-04-11 — set up Sphinx documentation
+  - **`pixi.toml`**: added `[feature.docs]` feature with `sphinx`, `sphinx-autodoc-typehints`, `shibuya`; added `docs` environment; wired `docs` task (`sphinx-build -b html docs/ docs/_build/html`)
+  - **`docs/conf.py`**: project root on `sys.path` for autodoc imports; extensions: `sphinx.ext.autodoc`, `sphinx.ext.napoleon`, `sphinx_autodoc_typehints`; theme: `shibuya`; Napoleon configured for Google-style docstrings
+  - **`docs/index.rst`**: toctree with User Guide (usage) and API Reference (ingestion, retrieval, generation, evaluation, utils) sections
+  - **`docs/usage.rst`**: hand-written task reference covering all `pixi run` tasks grouped into Ingestion, Querying, Evaluation, and Development sections; env vars and prerequisites documented per task; `query-ollama` explicitly documents that `ollama serve` must be running as a background process in a separate terminal
+  - **`docs/modules/`**: one `.rst` per module group with `automodule` directives and `:members:`, `:undoc-members:`, `:show-inheritance:` options
+  - **`.gitignore`**: added `docs/_build/` exclusion
+  - **`README.md`**: clarified `ollama serve` background process requirement in query section
+  - **`src/ingestion/chunker.py`** and **`src/evaluation/retrieval_metrics.py`**: minor RST formatting fixes in docstrings to resolve Sphinx warnings (missing space in inline literal, indented continuation line)
+  - Build confirmed clean: `pixi run -e docs docs` produces `docs/_build/html/index.html` with zero warnings
 - 2026-04-06 — built evaluation layer (`src/evaluation/`); **not yet tested**
   - **`src/evaluation/question_generator.py`**: `generate_questions_from_chunks(chunks, n_questions, api_key, model)` — randomly samples chunks from `store._metadata`, calls `claude-haiku-4-5-20251001` once per chunk (max_tokens=200) to generate one self-contained research question, saves to `data/eval/eval_questions.jsonl`; CLI with `--n` and `--index-path` flags; pixi task: `generate-eval-questions`
   - **`src/evaluation/retrieval_metrics.py`**: `evaluate_retrieval(eval_questions, vector_store, embedder, top_k)` — embeds each question, searches FAISS, checks if source chunk (matched by `source_file` + `chunk_id`) appears in top-K; computes Precision@K, Recall@K (hit rate), and MRR; no LLM calls, fully deterministic; returns summary dict + per-question detail rows
@@ -42,6 +52,7 @@
 - **Test scripts** (`scripts/test_pdf_parser.py`, `test_chunker.py`, `test_embedder.py`, `test_vector_store.py`, `test_claude_generation.py`): Ad-hoc smoke tests for each stage — ingestion confirmed working; vector store test covers full parse→chunk→filter→embed→index→search→save→load round-trip; generation test loads saved index and runs end-to-end query through Claude
 - **Query CLI** (`scripts/query_assistant.py`): `python scripts/query_assistant.py "question"` for single-shot; bare invocation for interactive REPL; `--index`, `--top-k`, `--max-tokens`, `--verbose` flags; answers stream token-by-token; per-query and session-total cost printed after each answer
 - **Bulk ingestion script** (`scripts/ingest_papers.py`): walks PDF library recursively, full parse→chunk→filter→embed→FAISS pipeline, bulk embedding batches, checkpoint every 50 papers, `--resume` flag; confirmed working against full 600-paper library
+- **Sphinx documentation** (`docs/`): `pixi run -e docs docs` builds HTML docs to `docs/_build/html/`; autodoc pulls docstrings from all `src/` modules; `usage.rst` documents every pixi task with env vars and prerequisites; shibuya theme; `[feature.docs]` keeps sphinx deps out of the default environment
 - **Evaluation layer** (`src/evaluation/`) — built, **not yet tested**:
   - `question_generator.py`: Claude-powered question generation from sampled index chunks → `data/eval/eval_questions.jsonl`
   - `retrieval_metrics.py`: deterministic Precision@K / Recall@K / MRR computation against labelled questions
@@ -50,7 +61,7 @@
 - **PDF library**: 1.3GB, ~600 psychology/neuroscience/AI papers exported from Zotero (with RDF metadata)
 
 ## Current State
-All core pipeline components are complete and confirmed working at scale. The full RAG pipeline runs end-to-end: parse PDF → chunk (512 tokens, 50 overlap) → noise-filter → embed with `all-mpnet-base-v2` → FAISS index → cosine similarity search → generation (Claude or local Ollama) with chunk citations. Two local Ollama models are available (`llama3.2:3b`, `phi4-mini`). Query logging writes to `data/query_logs/query_log.jsonl`. The evaluation layer has been built but not yet tested. What's still missing: pytest unit tests.
+All core pipeline components are complete and confirmed working at scale. The full RAG pipeline runs end-to-end: parse PDF → chunk (512 tokens, 50 overlap) → noise-filter → embed with `all-mpnet-base-v2` → FAISS index → cosine similarity search → generation (Claude or local Ollama) with chunk citations. Two local Ollama models are available (`llama3.2:3b`, `phi4-mini`). Query logging writes to `data/query_logs/query_log.jsonl`. Sphinx documentation is set up and builds cleanly. The evaluation layer has been built but not yet tested. What's still missing: pytest unit tests.
 
 ## Dependency Resolutions
 - **`sentence-transformers = ">=2.3.0,<2.4.0"`** — 2.2.x was broken because it imports `cached_download` from `huggingface_hub`, which was removed in newer versions of that library (installed: 0.36.2). 2.3.x dropped that import. Upper bound `<2.4.0` chosen for stability.

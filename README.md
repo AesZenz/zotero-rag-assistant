@@ -114,7 +114,8 @@ pixi run query "your question here"
 # Interactive REPL (Claude)
 pixi run query
 
-# Use the local Ollama backend instead (requires `ollama serve`)
+# Use the local Ollama backend instead
+# (requires `ollama serve` running as a background process in a separate terminal)
 pixi run query-ollama "your question here"
 pixi run query-ollama
 

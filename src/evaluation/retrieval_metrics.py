@@ -6,8 +6,7 @@ FAISS index, and checks whether the source chunk appears in the top-K results.
 
 Computed metrics (all averaged over questions):
 - Precision@K  = 1/K  if the source chunk is found in top-K, else 0
-- Recall@K     = 1.0  if the source chunk is found in top-K, else 0
-  (equivalent to Hit Rate@K for a single relevant document per question)
+- Recall@K = 1.0 if the source chunk is found in top-K, else 0 (Hit Rate@K for a single relevant document per question)
 - MRR          = 1/rank if found, else 0  (Mean Reciprocal Rank)
 
 No LLM calls — fully deterministic.

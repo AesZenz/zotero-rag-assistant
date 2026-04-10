@@ -82,5 +82,14 @@ test-vector-store = "PYTHONPATH=. python scripts/test_vector_store.py"
 notebook = "jupyter lab notebooks/"
 check = { depends-on = ["format", "lint", "test"] }
 
+[feature.docs.pypi-dependencies]
+sphinx = ">=7.2"
+sphinx-autodoc-typehints = ">=1.25"
+shibuya = ">=2024.1"
+
+[feature.docs.tasks]
+docs = "sphinx-build -b html docs/ docs/_build/html"
+
 [environments]
 default = { solve-group = "default" }
+docs = { features = ["docs"], solve-group = "default" }

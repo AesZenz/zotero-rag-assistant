@@ -37,7 +37,7 @@ def chunk_text(
             - ``text``       (str)  – decoded text of the chunk.
             - ``start_char`` (int)  – inclusive start character offset.
             - ``end_char``   (int)  – exclusive end character offset.
-            - ``token_count``(int)  – number of tokens in this chunk.
+            - ``token_count`` (int) – number of tokens in this chunk.
 
     Raises:
         ValueError: If ``chunk_size`` <= 0 or ``overlap`` >= ``chunk_size``.

@@ -50,3 +50,6 @@ chroma_db/
 # Model cache
 models/
 .cache/
+
+# Sphinx build output
+docs/_build/
