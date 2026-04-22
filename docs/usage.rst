@@ -135,8 +135,8 @@ Evaluation
 
    pixi run generate-eval-questions
    # with options:
-   pixi run generate-eval-questions -- --n 50
-   pixi run generate-eval-questions -- --n 50 --index-path data/paper_index.faiss
+   pixi run generate-eval-questions --n 50
+   pixi run generate-eval-questions --n 50 --index-path data/paper_index.faiss
 
 Samples ``n`` chunks from the FAISS index and uses Claude to generate one
 self-contained research question per chunk. Results are written to

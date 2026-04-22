@@ -14,6 +14,8 @@ No LLM calls — fully deterministic.
 
 from __future__ import annotations
 
+import math
+
 from src.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -24,6 +26,9 @@ def evaluate_retrieval(
     vector_store,
     embedder,
     top_k: int = 5,
+    decompose: bool = False,
+    api_key: str = "",
+    decomposition_model: str = "claude-haiku-4-5-20251001",
 ) -> dict:
     """Evaluate retrieval quality against labelled evaluation questions.
 
@@ -46,15 +51,31 @@ def evaluate_retrieval(
         - ``n_found`` (int): Questions where the source chunk was in top-K.
         - ``per_question`` (list[dict]): Per-question detail rows.
     """
+    if decompose:
+        from src.retrieval.query_decomposer import decompose_query
+        logger.info("Retrieval eval running with query decomposition (model=%s)", decomposition_model)
+    else:
+        logger.info("Retrieval eval running without query decomposition")
+
     per_question: list[dict] = []
 
     for q in eval_questions:
-        question_text  = q["question"]
+        question_text   = q["question"]
         source_filename = q["source_filename"]
         chunk_index     = q["chunk_index"]
 
-        query_embedding = embedder.embed_text(question_text)
-        results = vector_store.search(query_embedding, top_k=top_k)
+        if decompose:
+            sub_questions = decompose_query(question_text, api_key, model=decomposition_model)
+            chunks_per_sub = math.ceil(top_k / len(sub_questions))
+            seen: dict[str, dict] = {}
+            for sq in sub_questions:
+                for chunk in vector_store.search(embedder.embed_text(sq), top_k=chunks_per_sub):
+                    cid = str(chunk.get("chunk_id", id(chunk)))
+                    if cid not in seen or chunk.get("score", 0.0) > seen[cid].get("score", 0.0):
+                        seen[cid] = chunk
+            results = sorted(seen.values(), key=lambda c: c.get("score", 0.0), reverse=True)
+        else:
+            results = vector_store.search(embedder.embed_text(question_text), top_k=top_k)
 
         found_rank: int | None = None
         for rank, result in enumerate(results, start=1):

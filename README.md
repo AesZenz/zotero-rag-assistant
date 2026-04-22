@@ -38,6 +38,9 @@ embedder.py         all-mpnet-base-v2 (768-dim), CPU-only, batch inference
 vector_store.py     FAISS IndexFlatIP, L2-normalised cosine similarity
     │
     ▼
+query_decomposer.py (optional) splits complex queries into sub-questions via Claude,
+    │               merges and deduplicates retrieved chunks before generation
+    ▼
 generator.py        backend selector (GENERATION_BACKEND env var)
     │               ├── claude_client.py   → Anthropic API, cost tracked per query
     │               └── ollama_client.py   → local Ollama HTTP API, free
@@ -72,12 +75,13 @@ All layers are independently testable. The pipeline was built one component at a
 | Noise filter | `src/ingestion/noise_filter.py` | ✅ complete |
 | Embedder | `src/ingestion/embedder.py` | ✅ complete |
 | FAISS vector store | `src/retrieval/vector_store.py` | ✅ complete |
+| Query decomposer | `src/retrieval/query_decomposer.py` | ✅ complete (off by default) |
 | Claude generation layer | `src/generation/claude_client.py` | ✅ complete |
 | Ollama generation layer | `src/generation/ollama_client.py` | ✅ complete |
 | Backend selector | `src/generation/generator.py` | ✅ complete |
 | Query CLI | `scripts/query_assistant.py` | ✅ complete |
 | Bulk ingestion script | `scripts/ingest_papers.py` | ✅ complete |
-| Evaluation module | `src/evaluation/` | ⚠️ built, not yet tested |
+| Evaluation module | `src/evaluation/` | ✅ complete |
 | Pytest test suite | `tests/` | 🔲 planned |
 
 ---
@@ -119,6 +123,11 @@ pixi run query
 pixi run query-ollama "your question here"
 pixi run query-ollama
 
+# Enable query decomposition (splits complex questions into sub-questions before retrieval)
+# Off by default — see QUERY_DECOMPOSITION in .env
+QUERY_DECOMPOSITION=true pixi run query "your question here"
+QUERY_DECOMPOSITION=true pixi run query-ollama "your question here"
+
 # Pass additional options via -- separator
 pixi run query -- --top-k 8 --max-tokens 600 --verbose "your question"
 ```
@@ -137,8 +146,10 @@ PDF_LIBRARY_PATH=/path/to/zotero/folder
 CHUNK_SIZE=512
 CHUNK_OVERLAP=50
 TOP_K_CHUNKS=5
-MAX_TOKENS_PER_RESPONSE=500
+MAX_TOKENS_PER_RESPONSE=1000
 USE_LOCAL_EMBEDDINGS=true
+QUERY_DECOMPOSITION=false        # set true to split complex queries into sub-questions
+QUERY_DECOMPOSITION_MODEL=claude-haiku-4-5-20251001
 ```
 
 ---

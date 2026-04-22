@@ -9,15 +9,16 @@ Usage:
   pixi run evaluate
 
   # Full evaluation including answer quality (uses Claude/Ollama):
-  pixi run evaluate -- --full
+  pixi run evaluate --full
 
-  # Custom paths:
-  pixi run evaluate -- --questions data/eval/eval_questions.jsonl --top-k 10
+  # Custom question set (or set EVAL_QUESTIONS_PATH in .env):
+  pixi run evaluate --questions data/eval/eval_questions_combined_golden.jsonl --top-k 10
 """
 
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
 import sys
@@ -29,11 +30,25 @@ load_dotenv()
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
-_PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_PROJECT_ROOT       = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_DECOMPOSE          = os.getenv("QUERY_DECOMPOSITION", "false").lower() == "true"
+_DECOMPOSITION_MODEL = os.getenv("QUERY_DECOMPOSITION_MODEL", "claude-haiku-4-5-20251001")
 
-_DEFAULT_QUESTIONS = os.path.join(_PROJECT_ROOT, "data", "eval", "eval_questions.jsonl")
-_DEFAULT_INDEX     = os.path.join(_PROJECT_ROOT, "data", "paper_index.faiss")
-_DEFAULT_TOP_K     = 5
+_EVAL_DIR      = os.path.join(_PROJECT_ROOT, "data", "eval")
+_DEFAULT_INDEX = os.path.join(_PROJECT_ROOT, "data", "paper_index.faiss")
+_DEFAULT_TOP_K = 5
+
+
+def _latest_eval_questions() -> str:
+    """Return the path set by EVAL_QUESTIONS_PATH, or the newest eval_questions_*.jsonl,
+    falling back to eval_questions.jsonl if no timestamped file exists."""
+    env_path = os.getenv("EVAL_QUESTIONS_PATH")
+    if env_path:
+        return env_path
+    timestamped = sorted(glob.glob(os.path.join(_EVAL_DIR, "eval_questions_*.jsonl")))
+    if timestamped:
+        return timestamped[-1]
+    return os.path.join(_EVAL_DIR, "eval_questions.jsonl")
 
 
 # ---------------------------------------------------------------------------
@@ -101,8 +116,9 @@ def main() -> None:
         epilog=__doc__,
     )
     parser.add_argument(
-        "--questions", default=_DEFAULT_QUESTIONS, metavar="PATH",
-        help=f"Eval questions JSONL path (default: data/eval/eval_questions.jsonl)",
+        "--questions", default=_latest_eval_questions(), metavar="PATH",
+        help="Eval questions JSONL path (default: EVAL_QUESTIONS_PATH env var, "
+             "then newest eval_questions_*.jsonl, then eval_questions.jsonl)",
     )
     parser.add_argument(
         "--index", default=_DEFAULT_INDEX, metavar="PATH",
@@ -117,6 +133,9 @@ def main() -> None:
         help="Also run answer quality evaluation (incurs LLM API cost)",
     )
     args = parser.parse_args()
+
+    decomp_label = f"ON (model={_DECOMPOSITION_MODEL})" if _DECOMPOSE else "OFF"
+    print(f"Query decomposition: {decomp_label}")
 
     # ---- Load eval questions ----
     print(f"Loading eval questions from '{args.questions}'…")
@@ -137,8 +156,12 @@ def main() -> None:
 
     # ---- Retrieval evaluation ----
     from src.evaluation.retrieval_metrics import evaluate_retrieval
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
     print(f"Running retrieval evaluation (top_k={args.top_k})…")
-    retrieval_metrics = evaluate_retrieval(questions, store, embedder, top_k=args.top_k)
+    retrieval_metrics = evaluate_retrieval(
+        questions, store, embedder, top_k=args.top_k,
+        decompose=_DECOMPOSE, api_key=api_key, decomposition_model=_DECOMPOSITION_MODEL,
+    )
     _print_retrieval_summary(retrieval_metrics)
 
     # ---- Answer quality evaluation (optional) ----
@@ -162,10 +185,11 @@ def main() -> None:
     out_path = os.path.join(out_dir, f"eval_results_{timestamp}.jsonl")
 
     output: dict = {
-        "timestamp":    timestamp,
-        "n_questions":  len(questions),
-        "top_k":        args.top_k,
-        "retrieval":    {k: v for k, v in retrieval_metrics.items() if k != "per_question"},
+        "timestamp":             timestamp,
+        "n_questions":           len(questions),
+        "top_k":                 args.top_k,
+        "decomposition_enabled": _DECOMPOSE,
+        "retrieval":             {k: v for k, v in retrieval_metrics.items() if k != "per_question"},
         "retrieval_per_question": retrieval_metrics.get("per_question", []),
     }
     if answer_results:

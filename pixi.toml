@@ -69,9 +69,10 @@ setup = "python -c 'import nltk; nltk.download(\"punkt\"); nltk.download(\"stopw
 ingest = "PYTHONPATH=. python scripts/ingest_papers.py"
 ingest-library = "PYTHONPATH=. python scripts/ingest_papers.py"
 query = "PYTHONPATH=. python scripts/query_assistant.py"
-query-ollama = { cmd = "PYTHONPATH=. python scripts/query_assistant.py", env = { GENERATION_BACKEND = "ollama" } }
+query-ollama = { cmd = "PYTHONPATH=. python scripts/query_assistant.py", env = { GENERATION_BACKEND = "ollama", QUERY_DECOMPOSITION = "false" } }
 evaluate = "PYTHONPATH=. python scripts/run_evaluation.py"
 generate-eval-questions = "PYTHONPATH=. python src/evaluation/question_generator.py"
+convert-querylog = "PYTHONPATH=. python scripts/convert_querylog_to_eval.py"
 format = "black src/ scripts/ tests/"
 lint = "ruff check src/ scripts/ tests/"
 test = "PYTHONPATH=. pytest tests/ -v --cov=src --cov-report=html"

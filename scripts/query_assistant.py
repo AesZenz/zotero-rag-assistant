@@ -32,6 +32,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 from src.ingestion.embedder import SentenceTransformerEmbedder
 from src.retrieval.vector_store import FAISSVectorStore
+from src.retrieval.query_decomposer import decompose_query
 from src.generation.generator import get_generator
 
 # ---------------------------------------------------------------------------
@@ -41,6 +42,9 @@ from src.generation.generator import get_generator
 DEFAULT_INDEX = "data/paper_index.faiss"
 DEFAULT_TOP_K = 5
 DEFAULT_MAX_TOKENS = int(os.getenv("MAX_TOKENS_PER_RESPONSE", "500"))
+
+_DECOMPOSITION_ENABLED = os.getenv("QUERY_DECOMPOSITION", "false").lower() == "true"
+_DECOMPOSITION_MODEL = os.getenv("QUERY_DECOMPOSITION_MODEL", "claude-haiku-4-5-20251001")
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _LOG_PATH = os.path.join(_PROJECT_ROOT, "data", "query_logs", "query_log.jsonl")
@@ -111,11 +115,20 @@ def run_query(
 ) -> None:
     """Execute the full RAG pipeline for a single question and print results."""
 
-    # 1. Embed query
-    query_embedding = embedder.embed_text(question)
-
-    # 2. Retrieve context
-    results = store.search(query_embedding, top_k=top_k)
+    # 1. Embed query and retrieve context
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if _DECOMPOSITION_ENABLED:
+        sub_questions = decompose_query(question, api_key, model=_DECOMPOSITION_MODEL)
+        logger.info("Query decomposed into %d sub-questions: %s", len(sub_questions), sub_questions)
+        seen: dict[str, dict] = {}
+        for sq in sub_questions:
+            for chunk in store.search(embedder.embed_text(sq), top_k=top_k):
+                cid = str(chunk.get("chunk_id", id(chunk)))
+                if cid not in seen or chunk.get("score", 0.0) > seen[cid].get("score", 0.0):
+                    seen[cid] = chunk
+        results = sorted(seen.values(), key=lambda c: c.get("score", 0.0), reverse=True)[: top_k * 2]
+    else:
+        results = store.search(embedder.embed_text(question), top_k=top_k)
 
     if not results:
         print(YELLOW("No relevant chunks found in the index."))
@@ -273,8 +286,19 @@ def main() -> None:
             break
 
         # Run query and capture cost for session total
-        query_embedding = embedder.embed_text(question)
-        results = store.search(query_embedding, top_k=args.top_k)
+        api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        if _DECOMPOSITION_ENABLED:
+            sub_questions = decompose_query(question, api_key, model=_DECOMPOSITION_MODEL)
+            logger.info("Query decomposed into %d sub-questions: %s", len(sub_questions), sub_questions)
+            seen: dict[str, dict] = {}
+            for sq in sub_questions:
+                for chunk in store.search(embedder.embed_text(sq), top_k=args.top_k):
+                    cid = str(chunk.get("chunk_id", id(chunk)))
+                    if cid not in seen or chunk.get("score", 0.0) > seen[cid].get("score", 0.0):
+                        seen[cid] = chunk
+            results = sorted(seen.values(), key=lambda c: c.get("score", 0.0), reverse=True)[: args.top_k * 2]
+        else:
+            results = store.search(embedder.embed_text(question), top_k=args.top_k)
 
         if not results:
             print(YELLOW("No relevant chunks found for this query.\n"))

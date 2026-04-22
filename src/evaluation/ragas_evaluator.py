@@ -56,8 +56,7 @@ Score the faithfulness of the answer on a scale from 0.0 to 1.0:
   0.5 — most claims are supported, but some go beyond what the context states
   0.0 — the answer makes claims that are not present in the context
 
-Respond with a JSON object containing exactly one key "faithfulness" and a float value.
-Example: {{"faithfulness": 0.85}}"""
+Respond with only a JSON object containing exactly two keys: "faithfulness" (a float 0.0–1.0) and "reasoning" (a one-sentence explanation of your score). No text before or after the JSON object. Example: {{"faithfulness": 0.85, "reasoning": "Most claims are directly supported by the context, but the effect size mentioned in the answer does not appear in the provided chunks."}}"""
 
 
 def _score_faithfulness_claude(
@@ -66,9 +65,9 @@ def _score_faithfulness_claude(
     contexts: list[str],
     api_key: str,
     model: str = "claude-haiku-4-5-20251001",
-) -> float:
-    """Ask Claude to rate answer faithfulness. Returns a float in [0, 1]."""
-    import anthropic
+) -> dict:
+    """Ask Claude to rate answer faithfulness. Returns dict with 'faithfulness' and 'reasoning'."""
+    import anthropic # lazy import inside function; only gets imported if the function is actually called 
 
     context_block = "\n\n".join(f"[{i + 1}] {c}" for i, c in enumerate(contexts))
     prompt = _FAITHFULNESS_PROMPT.format(
@@ -81,20 +80,25 @@ def _score_faithfulness_claude(
     try:
         response = client.messages.create(
             model=model,
-            max_tokens=64,
+            max_tokens=256,
             messages=[{"role": "user", "content": prompt}],
         )
         raw = response.content[0].text.strip()
+        logger.warning("Faithfulness raw response: %r", raw)
         # Strip markdown code fences if present
         if raw.startswith("```"):
             raw = raw.split("```")[1]
             if raw.startswith("json"):
                 raw = raw[4:]
-        score = json.loads(raw.strip()).get("faithfulness", 0.0)
-        return float(max(0.0, min(1.0, score)))
+        raw = raw.strip()
+        parsed = json.loads(raw[raw.find("{"):raw.rfind("}") + 1])
+        return {
+            "faithfulness": float(max(0.0, min(1.0, parsed.get("faithfulness", 0.0)))),
+            "reasoning": parsed.get("reasoning", ""),
+        }
     except Exception as exc:
         logger.warning("Faithfulness scoring failed: %s", exc)
-        return 0.0
+        return {"faithfulness": 0.0, "reasoning": ""}
 
 
 # ---------------------------------------------------------------------------
@@ -187,10 +191,9 @@ def evaluate_answers(
         if _RAGAS_AVAILABLE:
             scores = _score_with_ragas(question_text, answer, contexts)
         else:
-            faith = _score_faithfulness_claude(
+            scores = _score_faithfulness_claude(
                 question_text, answer, contexts, resolved_key, judge_model
             )
-            scores = {"faithfulness": faith}
 
         results.append({
             "question":      question_text,

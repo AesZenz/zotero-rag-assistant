@@ -3,12 +3,12 @@ Evaluation question generator for the Zotero RAG Assistant.
 
 Samples chunks from the FAISS index and uses Claude to generate one
 self-contained research question per chunk that the chunk directly answers.
-Output is written to data/eval/eval_questions.jsonl.
+Output is written to data/eval/eval_questions_<timestamp>.jsonl.
 
 CLI usage (via pixi run generate-eval-questions):
   pixi run generate-eval-questions
-  pixi run generate-eval-questions -- --n 50
-  pixi run generate-eval-questions -- --n 50 --index-path data/paper_index.faiss
+  pixi run generate-eval-questions --n 50
+  pixi run generate-eval-questions --n 50 --index-path data/paper_index.faiss
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ import json
 import os
 import random
 import sys
+from datetime import datetime, timezone
 from typing import Optional
 
 import anthropic
@@ -30,8 +31,13 @@ load_dotenv()
 logger = get_logger(__name__)
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-_DEFAULT_OUTPUT = os.path.join(_PROJECT_ROOT, "data", "eval", "eval_questions.jsonl")
-_DEFAULT_INDEX  = os.path.join(_PROJECT_ROOT, "data", "paper_index.faiss")
+_EVAL_DIR      = os.path.join(_PROJECT_ROOT, "data", "eval")
+_DEFAULT_INDEX = os.path.join(_PROJECT_ROOT, "data", "paper_index.faiss")
+
+
+def _timestamped_output_path() -> str:
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return os.path.join(_EVAL_DIR, f"eval_questions_{timestamp}.jsonl")
 
 _QUESTION_PROMPT = """\
 You are creating evaluation questions for a retrieval-augmented generation (RAG) system.
@@ -66,8 +72,8 @@ def generate_questions_from_chunks(
         n_questions: Number of questions to generate.
         api_key: Anthropic API key.
         model: Claude model ID to use for generation.
-        output_path: Destination JSONL path. Defaults to
-            ``<project_root>/data/eval/eval_questions.jsonl``.
+        output_path: Destination JSONL path. Defaults to a timestamped file
+            ``<project_root>/data/eval/eval_questions_<timestamp>.jsonl``.
 
     Returns:
         List of dicts with keys:
@@ -77,7 +83,7 @@ def generate_questions_from_chunks(
         - ``chunk_index`` (int): The ``chunk_id`` of the source chunk.
     """
     if not output_path:
-        output_path = _DEFAULT_OUTPUT
+        output_path = _timestamped_output_path()
 
     n_questions = min(n_questions, len(chunks))
     sampled = random.sample(chunks, n_questions)
@@ -160,10 +166,12 @@ if __name__ == "__main__":
     store = FAISSVectorStore.load(args.index_path)
     print(f"  {store.size:,} vectors in index")
 
+    output_path = _timestamped_output_path()
     questions = generate_questions_from_chunks(
         chunks=store._metadata,
         n_questions=args.n,
         api_key=api_key,
         model=args.model,
+        output_path=output_path,
     )
-    print(f"Generated {len(questions)} questions → {_DEFAULT_OUTPUT}")
+    print(f"Generated {len(questions)} questions → {output_path}")
