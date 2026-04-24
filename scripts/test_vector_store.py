@@ -5,19 +5,18 @@ Reads the test PDF path from TEST_PDF_PATH in .env (or the environment).
 """
 
 import os
-from dotenv import load_dotenv
 
-load_dotenv()
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["OMP_NUM_THREADS"] = "1"
 
+from src.config import settings
 from src.ingestion.pdf_parser import extract_text_from_pdf, extract_metadata
 from src.ingestion.chunker import chunk_document
 from src.ingestion.noise_filter import filter_chunks
 from src.ingestion.embedder import SentenceTransformerEmbedder, embed_chunks
 from src.retrieval.vector_store import FAISSVectorStore
 
-PDF_PATH = os.environ["TEST_PDF_PATH"]
+PDF_PATH = settings.test_pdf_path
 INDEX_PATH = "data/test_index.faiss"
 QUERY = "How does working memory relate to intelligence?"
 TOP_K = 5

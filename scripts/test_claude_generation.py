@@ -11,12 +11,10 @@ Steps:
 
 import os
 
-from dotenv import load_dotenv
-
-load_dotenv()
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
+from src.config import settings
 from src.ingestion.embedder import SentenceTransformerEmbedder
 from src.retrieval.vector_store import FAISSVectorStore
 from src.generation.claude_client import ClaudeGenerator
@@ -28,7 +26,7 @@ from src.generation.claude_client import ClaudeGenerator
 INDEX_PATH = "data/test_index.faiss"
 QUERY = "How does working memory relate to intelligence?"
 TOP_K = 5
-MAX_TOKENS = int(os.getenv("MAX_TOKENS_PER_RESPONSE", "500"))
+MAX_TOKENS = settings.max_tokens_per_response
 
 # ---------------------------------------------------------------------------
 # Step 1: Load index

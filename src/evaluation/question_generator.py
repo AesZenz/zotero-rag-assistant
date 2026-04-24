@@ -22,11 +22,9 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import anthropic
-from dotenv import load_dotenv
 
+from src.config import settings
 from src.utils.logging import get_logger
-
-load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -155,7 +153,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = settings.anthropic_api_key
     if not api_key:
         print("Error: ANTHROPIC_API_KEY not set in .env", file=sys.stderr)
         sys.exit(1)

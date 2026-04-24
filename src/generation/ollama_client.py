@@ -14,15 +14,12 @@ using the standard ``requests`` library — no additional dependencies needed.
 from __future__ import annotations
 
 import json
-import os
 from typing import Iterator, Optional
 
 import requests
-from dotenv import load_dotenv
 
+from src.config import settings
 from src.utils.logging import get_logger
-
-load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -161,7 +158,7 @@ class OllamaClient:
         model: Optional[str] = None,
         base_url: Optional[str] = None,
     ) -> None:
-        self.model: str = model or os.getenv("OLLAMA_MODEL", "phi4-mini")
+        self.model: str = model or settings.ollama_model
         self._base = (base_url or _OLLAMA_BASE).rstrip("/")
         self._v1   = f"{self._base}/v1"
         logger.info("OllamaClient initialised (model=%s, base=%s)", self.model, self._base)

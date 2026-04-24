@@ -24,15 +24,14 @@ import os
 import sys
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
-
-load_dotenv()
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
+from src.config import settings
+
 _PROJECT_ROOT       = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_DECOMPOSE          = os.getenv("QUERY_DECOMPOSITION", "false").lower() == "true"
-_DECOMPOSITION_MODEL = os.getenv("QUERY_DECOMPOSITION_MODEL", "claude-haiku-4-5-20251001")
+_DECOMPOSE          = settings.query_decomposition
+_DECOMPOSITION_MODEL = settings.query_decomposition_model
 
 _EVAL_DIR      = os.path.join(_PROJECT_ROOT, "data", "eval")
 _DEFAULT_INDEX = os.path.join(_PROJECT_ROOT, "data", "paper_index.faiss")
@@ -42,7 +41,7 @@ _DEFAULT_TOP_K = 5
 def _latest_eval_questions() -> str:
     """Return the path set by EVAL_QUESTIONS_PATH, or the newest eval_questions_*.jsonl,
     falling back to eval_questions.jsonl if no timestamped file exists."""
-    env_path = os.getenv("EVAL_QUESTIONS_PATH")
+    env_path = settings.eval_questions_path
     if env_path:
         return env_path
     timestamped = sorted(glob.glob(os.path.join(_EVAL_DIR, "eval_questions_*.jsonl")))
@@ -156,7 +155,7 @@ def main() -> None:
 
     # ---- Retrieval evaluation ----
     from src.evaluation.retrieval_metrics import evaluate_retrieval
-    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    api_key = settings.anthropic_api_key
     print(f"Running retrieval evaluation (top_k={args.top_k})…")
     retrieval_metrics = evaluate_retrieval(
         questions, store, embedder, top_k=args.top_k,

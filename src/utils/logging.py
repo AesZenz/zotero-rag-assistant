@@ -7,15 +7,12 @@ Call get_logger(__name__) in any module to get a properly configured logger.
 """
 
 import logging
-import os
 from pathlib import Path
 
-from dotenv import load_dotenv
+from src.config import settings
 
-load_dotenv()
-
-_LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
-_LOG_FILE: str | None = os.getenv("LOG_FILE")
+_LOG_LEVEL: str = settings.log_level.upper()
+_LOG_FILE: str | None = settings.log_file
 
 _FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s - %(message)s"
 _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"

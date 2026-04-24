@@ -1,6 +1,21 @@
 # Project Status
 
 ## Update Log
+- 2026-04-24 — Pydantic Settings config layer; dotenv removed from codebase
+  - **`src/config.py`** (new): `Settings(BaseSettings)` covering all 23 env vars from `.env.example` plus `EVAL_QUESTIONS_PATH`; singleton `settings = Settings()` reads `.env` directly via Pydantic's `env_file` — no `load_dotenv()` calls required anywhere
+  - Replaced all 24 `os.getenv()` calls across 10 files with `settings.<field>` access; `from dotenv import load_dotenv` / `load_dotenv()` removed from every affected file
+  - **`src/utils/logging.py`**: `LOG_LEVEL`, `LOG_FILE` → `settings.log_level`, `settings.log_file`
+  - **`src/generation/claude_client.py`**: `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`
+  - **`src/generation/ollama_client.py`**: `OLLAMA_MODEL`
+  - **`src/generation/generator.py`**: `GENERATION_BACKEND`
+  - **`src/evaluation/ragas_evaluator.py`**: `ANTHROPIC_API_KEY`
+  - **`src/evaluation/question_generator.py`**: `ANTHROPIC_API_KEY`
+  - **`scripts/run_evaluation.py`**: `QUERY_DECOMPOSITION`, `QUERY_DECOMPOSITION_MODEL`, `EVAL_QUESTIONS_PATH`, `ANTHROPIC_API_KEY`
+  - **`scripts/ingest_papers.py`**: `PDF_LIBRARY_PATH`, `CHUNK_SIZE`, `CHUNK_OVERLAP`; `from src.config import settings` placed after the `os.environ["LOG_FILE"]` override so the ingestion-specific log path is picked up at `Settings()` instantiation time
+  - **`scripts/test_claude_generation.py`**: `MAX_TOKENS_PER_RESPONSE`
+  - **`scripts/query_assistant.py`**: `MAX_TOKENS_PER_RESPONSE`, `QUERY_DECOMPOSITION`, `QUERY_DECOMPOSITION_MODEL`, `ANTHROPIC_API_KEY` ×2, `GENERATION_BACKEND` ×4
+  - **`scripts/test_pdf_parser.py`**, **`test_chunker.py`**, **`test_embedder.py`**, **`test_vector_store.py`**: removed `load_dotenv()`; replaced `os.environ["TEST_PDF_PATH"]` (hard key-lookup that would `KeyError` without `load_dotenv`) with `settings.test_pdf_path`
+  - Import ordering constraint documented: in any script that overrides `os.environ` before src imports (e.g. `LOG_FILE` in `ingest_papers.py`, `OMP_NUM_THREADS` in `test_vector_store.py`), `from src.config import settings` must come *after* those overrides because `Settings()` reads `os.environ` at instantiation time
 - 2026-04-22 — query decomposition, faithfulness reasoning, eval decomposition support
   - **`src/retrieval/query_decomposer.py`** (new): `decompose_query(query, api_key, model, max_sub_questions)` — calls Claude with a decomposition prompt, parses the JSON array response using safe `find("[")` / `rfind("]")` extraction, falls back to `[query]` on any failure; lazy-imports `anthropic`
   - **`src/evaluation/ragas_evaluator.py`**: updated `_FAITHFULNESS_PROMPT` to request a `"reasoning"` field alongside `"faithfulness"`; fixed JSON parsing to use `find("{")` / `rfind("}")` extraction to handle trailing text; `_score_faithfulness_claude` now returns `dict` with `"faithfulness"` and `"reasoning"` instead of a bare float; call site in `evaluate_answers` unpacks the dict directly so both fields land in results
@@ -71,6 +86,7 @@
 - **Test scripts** (`scripts/test_pdf_parser.py`, `test_chunker.py`, `test_embedder.py`, `test_vector_store.py`, `test_claude_generation.py`): Ad-hoc smoke tests for each stage — ingestion confirmed working; vector store test covers full parse→chunk→filter→embed→index→search→save→load round-trip; generation test loads saved index and runs end-to-end query through Claude
 - **Query CLI** (`scripts/query_assistant.py`): `python scripts/query_assistant.py "question"` for single-shot; bare invocation for interactive REPL; `--index`, `--top-k`, `--max-tokens`, `--verbose` flags; answers stream token-by-token; per-query and session-total cost printed after each answer
 - **Bulk ingestion script** (`scripts/ingest_papers.py`): walks PDF library recursively, full parse→chunk→filter→embed→FAISS pipeline, bulk embedding batches, checkpoint every 50 papers, `--resume` flag; confirmed working against full 600-paper library
+- **Centralised config** (`src/config.py`): `Settings(BaseSettings)` with 23 typed, validated env vars; singleton `settings` object is the single import point for all configuration; reads `.env` directly — no `os.getenv` or `load_dotenv` calls remain anywhere in the codebase
 - **Sphinx documentation** (`docs/`): `pixi run -e docs docs` builds HTML docs to `docs/_build/html/`; autodoc pulls docstrings from all `src/` modules; `usage.rst` documents every pixi task with env vars and prerequisites; shibuya theme; `[feature.docs]` keeps sphinx deps out of the default environment
 - **Query log → eval converter** (`scripts/convert_querylog_to_eval.py`): converts `query_log.jsonl` entries into `eval_questions` format by looking up chunk text from the FAISS metadata sidecar; reports any missing chunks; writes timestamped output; pixi task: `convert-querylog`
 - **Evaluation layer** (`src/evaluation/`) — built, **not yet tested**:
@@ -81,7 +97,7 @@
 - **PDF library**: 1.3GB, ~600 psychology/neuroscience/AI papers exported from Zotero (with RDF metadata)
 
 ## Current State
-All core pipeline components are complete and confirmed working at scale. The full RAG pipeline runs end-to-end: parse PDF → chunk (512 tokens, 50 overlap) → noise-filter → embed with `all-mpnet-base-v2` → FAISS index → cosine similarity search → generation (Claude or local Ollama) with chunk citations. Two local Ollama models are available (`llama3.2:3b`, `phi4-mini`). Query logging writes to `data/query_logs/query_log.jsonl`. Sphinx documentation is set up and builds cleanly. The evaluation pipeline has been improved: question generation now writes timestamped files, the query log can be converted to eval format via `convert-querylog`, and a combined 84-question golden dataset (`eval_questions_combined_golden.jsonl`) has been created. The eval questions path is now configurable via `EVAL_QUESTIONS_PATH`. The evaluation layer has been built but not yet tested end-to-end. What's still missing: pytest unit tests.
+All core pipeline components are complete and confirmed working at scale. The full RAG pipeline runs end-to-end: parse PDF → chunk (512 tokens, 50 overlap) → noise-filter → embed with `all-mpnet-base-v2` → FAISS index → cosine similarity search → generation (Claude or local Ollama) with chunk citations. Two local Ollama models are available (`llama3.2:3b`, `phi4-mini`). Query logging writes to `data/query_logs/query_log.jsonl`. Sphinx documentation is set up and builds cleanly. The evaluation pipeline has been improved: question generation now writes timestamped files, the query log can be converted to eval format via `convert-querylog`, and a combined 84-question golden dataset (`eval_questions_combined_golden.jsonl`) has been created. The eval questions path is now configurable via `EVAL_QUESTIONS_PATH`. All environment variables are now managed through a single `Settings(BaseSettings)` class in `src/config.py` — no `os.getenv` calls remain in the codebase. The evaluation layer has been tested end-to-end; the one untested path is the RAGAS branch of `ragas_evaluator.py` (requires the `ragas` package, which is not installed — the Claude-as-judge fallback is what runs and has been confirmed working). What's still missing: pytest unit tests.
 
 ## Dependency Resolutions
 - **`sentence-transformers = ">=2.3.0,<2.4.0"`** — 2.2.x was broken because it imports `cached_download` from `huggingface_hub`, which was removed in newer versions of that library (installed: 0.36.2). 2.3.x dropped that import. Upper bound `<2.4.0` chosen for stability.
@@ -105,20 +121,19 @@ All core pipeline components are complete and confirmed working at scale. The fu
 - **`convert_querylog_to_eval.py` format coupling**: the conversion script assumes `query_log.jsonl` uses `filename`/`chunk_index` keys in `retrieved_chunks`, and that these match the FAISS metadata's `source`/`chunk_id` fields. If either the query log format or the metadata schema changes, the script will silently produce wrong output (missing chunks). If either format is ever updated, update the script and re-validate with a test run.
 - ~~**PDF parser noise**~~ — resolved: `src/ingestion/noise_filter.py` built and confirmed working; pipeline is now parse→chunk→filter→embed
 - ~~**Metadata key mismatch bug**~~ — resolved: `extract_metadata()` now returns `"pdf_title"`
-- **Evaluation layer untested** — all four files written and committed; `pixi run generate-eval-questions` and `pixi run evaluate` have not been run yet; correctness of chunk matching logic (`source_file` + `chunk_id`) and RAGAS fallback unverified
+- **RAGAS evaluation path untested** — `ragas_evaluator.py` has two code paths: RAGAS (if the `ragas` package is installed) and Claude-as-judge fallback. Only the fallback has been tested; the RAGAS path has never run
 - ~~**`scripts/query_assistant.py` missing**~~ — resolved: built with streaming REPL and single-shot modes
 - ~~**No vector store implementation**~~ — resolved: `src/retrieval/vector_store.py` built and tested
 - ~~**No GitHub repo**~~ — resolved: pushed to https://github.com/AesZenz/zotero-rag-assistant
 - **No tests directory**: pytest + pytest-cov configured in pixi.toml but `tests/` doesn't exist; test coverage is 0%
 - **Hardcoded batch size**: `32` appears in two separate places in `embedder.py` (lines 105 and 159) — must be kept in sync manually
-- **No config management layer**: 17 env vars read ad-hoc; `pydantic-settings` is installed but unused — no validation, no central config object
+- ~~**No config management layer**~~ — resolved: `src/config.py` centralises all env vars into a `Settings(BaseSettings)` class; no `os.getenv` calls remain
 - **Unused heavy dependencies**: `langchain`, `langchain-community`, `chromadb`, `rich`, `click`, `pandas`, `scikit-learn`, `nltk` all installed but not imported anywhere (`anthropic` is now used)
 - **`pdfplumber` installed but unused**: PyMuPDF was chosen but pdfplumber remains as dead weight
 
 ## Next Steps (ordered)
-1. **Test evaluation layer** — run `pixi run generate-eval-questions -- --n 20`, then `pixi run evaluate`; verify chunk matching and metric output
-2. **Write pytest test suite** — unit tests for parser, chunker, embedder, vector store; integration test for full pipeline on known PDF
-3. **Add Pydantic settings** — centralize all env var reads into one `Settings` class with validation
+1. **Write pytest test suite** — unit tests for parser, chunker, embedder, vector store; integration test for full pipeline on known PDF
+2. **Install and test RAGAS** — add `ragas` to `pixi.toml` pypi-dependencies, run `pixi run evaluate --full`, verify the RAGAS metrics path in `ragas_evaluator.py` produces valid scores
 
 ## Concepts Learned So Far
 - **RAG pipeline**: All four stages built and working end-to-end — ingest (parse→chunk→filter→embed), index (FAISS), retrieve (cosine similarity search), generate (Claude with context + citation prompt)

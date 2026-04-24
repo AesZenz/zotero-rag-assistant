@@ -28,9 +28,8 @@ os.environ["LOG_FILE"] = "logs/ingestion.log"
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
-from dotenv import load_dotenv  # noqa: E402
-
-load_dotenv()
+# Import after env setup so Settings() picks up the LOG_FILE override above.
+from src.config import settings  # noqa: E402
 
 import numpy as np  # noqa: E402
 from tqdm import tqdm  # noqa: E402
@@ -341,7 +340,7 @@ def main() -> None:
     args = _parse_args()
 
     # Resolve PDF directory: CLI flag > .env > error
-    pdf_dir_env = os.getenv("PDF_LIBRARY_PATH")
+    pdf_dir_env = settings.pdf_library_path
     if args.pdf_dir:
         pdf_dir = args.pdf_dir
     elif pdf_dir_env:
@@ -357,8 +356,8 @@ def main() -> None:
         print(f"Error: PDF directory not found: '{pdf_dir}'")
         raise SystemExit(1)
 
-    chunk_size = int(os.getenv("CHUNK_SIZE", "512"))
-    overlap = int(os.getenv("CHUNK_OVERLAP", "50"))
+    chunk_size = settings.chunk_size
+    overlap = settings.chunk_overlap
 
     logger.info(
         "Ingestion started — pdf_dir='%s', output='%s', "

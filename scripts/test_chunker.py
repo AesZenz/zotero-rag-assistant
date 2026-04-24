@@ -1,10 +1,8 @@
-import os
-from dotenv import load_dotenv
+from src.config import settings
 from src.ingestion.pdf_parser import extract_text_from_pdf, extract_metadata
 from src.ingestion.chunker import chunk_document
 
-load_dotenv()
-PDF_PATH = os.environ["TEST_PDF_PATH"]
+PDF_PATH = settings.test_pdf_path
 
 text = extract_text_from_pdf(PDF_PATH)
 metadata = extract_metadata(PDF_PATH)

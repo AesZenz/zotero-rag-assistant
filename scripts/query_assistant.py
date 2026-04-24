@@ -24,12 +24,10 @@ import sys
 import time
 from datetime import datetime, timezone
 
-from dotenv import load_dotenv
-
-load_dotenv()
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
+from src.config import settings
 from src.ingestion.embedder import SentenceTransformerEmbedder
 from src.retrieval.vector_store import FAISSVectorStore
 from src.retrieval.query_decomposer import decompose_query
@@ -41,10 +39,10 @@ from src.generation.generator import get_generator
 
 DEFAULT_INDEX = "data/paper_index.faiss"
 DEFAULT_TOP_K = 5
-DEFAULT_MAX_TOKENS = int(os.getenv("MAX_TOKENS_PER_RESPONSE", "500"))
+DEFAULT_MAX_TOKENS = settings.max_tokens_per_response
 
-_DECOMPOSITION_ENABLED = os.getenv("QUERY_DECOMPOSITION", "false").lower() == "true"
-_DECOMPOSITION_MODEL = os.getenv("QUERY_DECOMPOSITION_MODEL", "claude-haiku-4-5-20251001")
+_DECOMPOSITION_ENABLED = settings.query_decomposition
+_DECOMPOSITION_MODEL = settings.query_decomposition_model
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _LOG_PATH = os.path.join(_PROJECT_ROOT, "data", "query_logs", "query_log.jsonl")
@@ -116,7 +114,7 @@ def run_query(
     """Execute the full RAG pipeline for a single question and print results."""
 
     # 1. Embed query and retrieve context
-    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    api_key = settings.anthropic_api_key
     if _DECOMPOSITION_ENABLED:
         sub_questions = decompose_query(question, api_key, model=_DECOMPOSITION_MODEL)
         logger.info("Query decomposed into %d sub-questions: %s", len(sub_questions), sub_questions)
@@ -173,7 +171,7 @@ def run_query(
     # 5. Cost summary
     latency = time.monotonic() - t0
     cost = generator._calculate_cost(total_input_tokens, total_output_tokens)
-    is_local = os.getenv("GENERATION_BACKEND", "claude").strip().lower() == "ollama"
+    is_local = settings.generation_backend.strip().lower() == "ollama"
     cost_str = "free (local)" if is_local else f"${cost:.6f}"
     _log_query(question, generator.model, results, "".join(answer_parts), latency, None if is_local else cost)
     print()
@@ -243,7 +241,7 @@ def main() -> None:
     embedder = SentenceTransformerEmbedder()
     print(DIM(f"Embedder ready ({embedder.model_name})"))
 
-    backend = os.getenv("GENERATION_BACKEND", "claude").strip().lower()
+    backend = settings.generation_backend.strip().lower()
     print(DIM(f"Initialising {backend} generator…"))
     generator = get_generator()
     print(DIM(f"Generator ready ({generator.model})"))
@@ -286,7 +284,7 @@ def main() -> None:
             break
 
         # Run query and capture cost for session total
-        api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        api_key = settings.anthropic_api_key
         if _DECOMPOSITION_ENABLED:
             sub_questions = decompose_query(question, api_key, model=_DECOMPOSITION_MODEL)
             logger.info("Query decomposed into %d sub-questions: %s", len(sub_questions), sub_questions)
@@ -333,7 +331,7 @@ def main() -> None:
             cost = generator._calculate_cost(in_tok, out_tok)
             session_cost += cost
 
-            is_local = os.getenv("GENERATION_BACKEND", "claude").strip().lower() == "ollama"
+            is_local = settings.generation_backend.strip().lower() == "ollama"
             _log_query(question, generator.model, results, "".join(repl_answer_parts), repl_latency, None if is_local else cost)
             if is_local:
                 cost_line = "free (local)"
@@ -356,7 +354,7 @@ def main() -> None:
 
         print()
 
-    is_local = os.getenv("GENERATION_BACKEND", "claude").strip().lower() == "ollama"
+    is_local = settings.generation_backend.strip().lower() == "ollama"
     session_summary = "Session cost: free (local)" if is_local else f"Session cost: ${session_cost:.6f}"
     print(DIM(session_summary))
     print(GREEN("Goodbye!"))

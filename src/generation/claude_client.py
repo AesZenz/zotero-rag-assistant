@@ -9,15 +9,12 @@ Wraps the Anthropic Python SDK (Software Development Kit) to:
 
 from __future__ import annotations
 
-import os
 from typing import Generator, Optional
 
 import anthropic
-from dotenv import load_dotenv
 
+from src.config import settings
 from src.utils.logging import get_logger
-
-load_dotenv()
 
 logger = get_logger(__name__)
 
@@ -78,13 +75,13 @@ class ClaudeGenerator:
         api_key: Optional[str] = None,
         model: Optional[str] = None,
     ) -> None:
-        resolved_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        resolved_key = api_key or settings.anthropic_api_key
         if not resolved_key:
             raise ValueError(
                 "Anthropic API key not found. Set ANTHROPIC_API_KEY in .env or pass it explicitly."
             )
 
-        self.model: str = model or os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
+        self.model: str = model or settings.claude_model
         self._client = anthropic.Anthropic(api_key=resolved_key)
         logger.info("ClaudeGenerator initialised (model=%s)", self.model)
 

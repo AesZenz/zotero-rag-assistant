@@ -9,14 +9,10 @@ Claude whether every claim in the answer is supported by the provided context.
 from __future__ import annotations
 
 import json
-import os
 from typing import Optional
 
-from dotenv import load_dotenv
-
+from src.config import settings
 from src.utils.logging import get_logger
-
-load_dotenv()
 logger = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -164,7 +160,7 @@ def evaluate_answers(
         ``contexts_used``, ``faithfulness``, and (when RAGAS is available)
         ``answer_relevancy``, ``context_precision``.
     """
-    resolved_key = api_key or os.getenv("ANTHROPIC_API_KEY", "")
+    resolved_key = api_key or settings.anthropic_api_key
     results: list[dict] = []
 
     for i, q in enumerate(eval_questions, start=1):

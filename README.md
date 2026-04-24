@@ -79,6 +79,7 @@ All layers are independently testable. The pipeline was built one component at a
 | Claude generation layer | `src/generation/claude_client.py` | ✅ complete |
 | Ollama generation layer | `src/generation/ollama_client.py` | ✅ complete |
 | Backend selector | `src/generation/generator.py` | ✅ complete |
+| Centralised config | `src/config.py` | ✅ complete |
 | Query CLI | `scripts/query_assistant.py` | ✅ complete |
 | Bulk ingestion script | `scripts/ingest_papers.py` | ✅ complete |
 | Evaluation module | `src/evaluation/` | ✅ complete |
@@ -141,7 +142,7 @@ pixi run query -- --top-k 8 --max-tokens 600 --verbose "your question"
 ANTHROPIC_API_KEY=your-key-here
 CLAUDE_MODEL=claude-sonnet-4-6
 GENERATION_BACKEND=claude        # or 'ollama' for local inference
-OLLAMA_MODEL=llama3.2:3b         # only used when GENERATION_BACKEND=ollama
+OLLAMA_MODEL=phi4-mini           # only used when GENERATION_BACKEND=ollama
 PDF_LIBRARY_PATH=/path/to/zotero/folder
 CHUNK_SIZE=512
 CHUNK_OVERLAP=50
@@ -166,10 +167,8 @@ QUERY_DECOMPOSITION_MODEL=claude-haiku-4-5-20251001
 
 ## Planned: Phase 2
 
-- **Pydantic settings** — centralize 17 env vars into a validated `Settings` class
+- **Pytest suite** — unit tests for parser, chunker, embedder, vector store; integration test for full pipeline on known PDF
 - **Reranking** — cross-encoder reranking post-retrieval for higher precision
-- **Zotero RDF metadata** — enrich chunk metadata with Zotero tags, collections, and notes
-- **Fine-tuning** — domain-adapted Llama model via cloud GPU rental
 
 ---
 

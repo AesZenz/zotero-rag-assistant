@@ -14,11 +14,7 @@ no conditional logic after this call.
 
 from __future__ import annotations
 
-import os
-
-from dotenv import load_dotenv
-
-load_dotenv()
+from src.config import settings
 
 
 def get_generator():
@@ -42,7 +38,7 @@ def get_generator():
             is not running.
         ValueError: If an unrecognised backend name is supplied.
     """
-    backend = os.getenv("GENERATION_BACKEND", "claude").strip().lower()
+    backend = settings.generation_backend.strip().lower()
 
     if backend == "claude":
         from src.generation.claude_client import ClaudeGenerator
