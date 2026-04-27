@@ -1,6 +1,6 @@
 # Zotero RAG Assistant
 
-A retrieval-augmented generation (RAG) system for querying a personal Zotero research library (~600 papers, psychology / neuroscience / AI) using local embeddings and the Claude API. Built as a learning project to understand RAG architecture from the ground up — each component was implemented independently before any orchestration layer was introduced.
+A retrieval-augmented generation (RAG) system for querying a personal Zotero research library (~600 papers, mainly from psychology and neuroscience) using local embeddings and the Claude API. Built as a learning project to understand RAG architecture from the ground up — each component was implemented independently before any orchestration layer was introduced.
 
 ---
 
@@ -19,32 +19,9 @@ $ pixi run query "What does the literature say about working memory and fluid in
 
 ## Architecture
 
-```
-PDF library
-    │
-    ▼
-pdf_parser.py       PyMuPDF text + metadata extraction
-    │
-    ▼
-chunker.py          512-token sliding window (50-token overlap), tiktoken cl100k_base
-    │
-    ▼
-noise_filter.py     Drops reference lists, affiliations, funding blocks (~45% of chunks)
-    │
-    ▼
-embedder.py         all-mpnet-base-v2 (768-dim), CPU-only, batch inference
-    │
-    ▼
-vector_store.py     FAISS IndexFlatIP, L2-normalised cosine similarity
-    │
-    ▼
-query_decomposer.py (optional) splits complex queries into sub-questions via Claude,
-    │               merges and deduplicates retrieved chunks before generation
-    ▼
-generator.py        backend selector (GENERATION_BACKEND env var)
-    │               ├── claude_client.py   → Anthropic API, cost tracked per query
-    │               └── ollama_client.py   → local Ollama HTTP API, free
-```
+![Architecture](docs/architecture_gh_opt.svg)
+
+**Ingestion:** PDFs are parsed with PyMuPDF, split into 512-token sliding-window chunks (50-token overlap, tiktoken `cl100k_base`), filtered for noise (reference lists, affiliations, funding blocks — ~45% of chunks dropped), then embedded with `all-mpnet-base-v2` (768-dim, CPU-only batch inference). **Retrieval:** embeddings are stored in a FAISS `IndexFlatIP` index with L2-normalised cosine similarity; an optional query decomposer splits complex queries into sub-questions via Claude before merging and deduplicating results. **Generation:** a backend selector routes to either the Anthropic API (`claude_client.py`, cost tracked per query) or a local Ollama instance (`ollama_client.py`).
 
 All layers are independently testable. The pipeline was built one component at a time, with each stage confirmed working before moving to the next.
 

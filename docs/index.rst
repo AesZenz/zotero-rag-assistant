@@ -4,6 +4,10 @@ zotero-rag-assistant
 A Retrieval-Augmented Generation (RAG) system for querying scientific papers
 from a Zotero library, with support for Claude API and local Ollama backends.
 
+.. image:: architecture_gh_opt.svg
+   :alt: Architecture diagram
+   :align: center
+
 .. toctree::
    :maxdepth: 2
    :caption: User Guide
