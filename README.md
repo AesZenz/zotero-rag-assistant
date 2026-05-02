@@ -63,7 +63,7 @@ All layers are independently testable. The pipeline was built one component at a
 | Query CLI | `scripts/query_assistant.py` | ✅ complete |
 | Bulk ingestion script | `scripts/ingest_papers.py` | ✅ complete |
 | Evaluation module | `src/evaluation/` | ✅ complete |
-| Pytest test suite | `tests/` | 🔲 planned |
+| Pytest test suite | `tests/` | ⚠️ generated, not yet verified |
 
 ---
 
@@ -145,9 +145,42 @@ QUERY_DECOMPOSITION_MODEL=claude-haiku-4-5-20251001
 
 ---
 
+## Testing
+
+A pytest suite was generated covering all core modules. It has not yet been manually reviewed.
+
+```bash
+# Unit tests only (excludes integration test)
+pixi run test
+
+# All tests including full pipeline integration test
+pixi run test-all
+
+# Unit tests with coverage report
+pixi run test-cov
+```
+
+**Coverage:**
+
+| Test file | What it covers |
+|---|---|
+| `test_pdf_parser.py` | Text extraction, metadata keys, page count, encrypted PDF handling |
+| `test_chunker.py` | Chunk count, token overlap, metadata propagation, empty input |
+| `test_noise_filter.py` | Reference lists, body text pass-through, funding blocks, affiliations |
+| `test_embedder.py` | Output shape/dtype, empty-input raises, `embed_chunks` helper (ST mocked) |
+| `test_vector_store.py` | Add/search correctness, top-k, score ordering, save/load round-trip, dimension mismatch |
+| `test_config.py` | Env-var override, field types, `ValidationError` on invalid input |
+| `test_query_decomposer.py` | Valid JSON parsing, malformed/empty fallback to original query (Anthropic mocked) |
+| `test_integration.py` | Full parse → chunk → filter → embed → FAISS → search round-trip (`@pytest.mark.integration`) |
+
+> The integration test uses a deterministic mock embedder so no real model is loaded.
+> `OMP_NUM_THREADS=1` is set in `conftest.py` to prevent the PyTorch OpenMP bug on Intel Mac.
+
+---
+
 ## Planned: Phase 2
 
-- **Pytest suite** — unit tests for parser, chunker, embedder, vector store; integration test for full pipeline on known PDF
+- **Verify and expand test suite** — manual review of generated tests; add edge cases as gaps are found
 - **Reranking** — cross-encoder reranking post-retrieval for higher precision
 
 ---
@@ -155,4 +188,4 @@ QUERY_DECOMPOSITION_MODEL=claude-haiku-4-5-20251001
 ## Known Limitations
 
 - HTML web snapshots in Zotero exports are silently skipped (PDF parser only)
-- No pytest suite yet — testing is currently ad-hoc smoke scripts per component
+- Pytest suite was generated but not yet manually verified — treat results with appropriate caution
