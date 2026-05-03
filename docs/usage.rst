@@ -207,8 +207,31 @@ Development
 
    pixi run test
 
-Runs the full test suite with pytest, verbose output, and coverage reporting.
-An HTML coverage report is written to ``htmlcov/``.
+Runs the unit test suite (excludes the ``@pytest.mark.integration`` test) with
+verbose pytest output. No model downloads or API calls — all external
+dependencies are mocked.
+
+``test-all``
+^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   pixi run test-all
+
+Runs all tests including the full-pipeline integration test
+(``tests/test_integration.py``). The integration test uses a deterministic mock
+embedder so no real model is loaded, but it does require the ``tests/fixtures/``
+sample PDF to be present.
+
+``test-cov``
+^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   pixi run test-cov
+
+Runs the unit tests (same scope as ``test``) with a coverage report printed to
+the terminal (``--cov=src --cov-report=term-missing``).
 
 ``test-parser`` / ``test-chunker`` / ``test-embedder`` / ``test-vector-store``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
