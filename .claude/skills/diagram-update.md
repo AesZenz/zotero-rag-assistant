@@ -9,7 +9,7 @@ Updating `docs/architecture_gh_opt.svg` in the zotero-rag-assistant repo when ne
 ## Layout conventions
 
 ### Canvas
-- `width="800" viewBox="0 0 800 940"` — adjust viewBox height if adding new rows
+- `width="800" viewBox="0 0 800 960"` — adjust viewBox height if adding new rows
 - White background `#ffffff`
 - Font: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif`
 
@@ -30,9 +30,10 @@ Updating `docs/architecture_gh_opt.svg` in the zotero-rag-assistant repo when ne
 | Generation | y=280..470 | B |
 | Evaluation | y=490..720 | A |
 | Scripts | y=490..720 | B |
-| Config/env bar | y=752..796 | full width |
-| Docs bar | y=832..876 | full width |
-| Legend | y=898..910 | full width |
+| Tests bar | y=740..790 | full width (x=40..760) |
+| Config/env bar | y=810..854 | full width (x=40..760) |
+| Docs bar | y=874..918 | full width (x=40..760) |
+| Legend | y=938 | full width |
 
 ---
 
@@ -61,9 +62,13 @@ Arrow colours:
 > Plan and verify EVERY arrow route against box boundary coordinates BEFORE writing any SVG.
 > Write out each segment as (x1,y1)→(x2,y2) and confirm it doesn't enter any box interior.
 
+### Minimum clearance from box borders
+> **Always maintain ≥8px clearance from any box edge when routing around it.**
+> 1–3px clearance looks like the arrow is touching or overlapping the border.
+
 ### Gap corridor routing
 All cross-column arrows route through the gap corridor (x=350..430).
-Use distinct x offsets within the corridor to avoid lines overlapping:
+The corridor is free space — no boxes occupy it. Use distinct x offsets within it to avoid overlap:
 
 | Arrow | Corridor x |
 |---|---|
@@ -72,6 +77,32 @@ Use distinct x offsets within the corridor to avoid lines overlapping:
 | eval → generation (dashed) | x=393 |
 | config → retrieval (dashed) | x=380 |
 | config → evaluation (dashed) | x=390 |
+
+### Left/right margin routing
+The gap corridor **cannot bypass full-width bars** (which span x=40..760 and block the corridor entirely). For those cases, route via the left margin (x<40) or right margin (x>760) — these are always clear of all boxes.
+
+**Left margin reserved offsets** (x < 40):
+| Arrow | Margin x |
+|---|---|
+| tests → ingestion | x=16 |
+| tests → retrieval | x=23 |
+
+**Right margin reserved offsets** (x > 760):
+| Arrow | Margin x |
+|---|---|
+| env bar → config | x=769 |
+| tests → config | x=777 |
+
+When picking a new margin offset: leave ≥6px between parallel lines and ≥8px from the nearest box edge (x=40 on the left, x=760 on the right).
+
+### Full-width bar insertion checklist
+Full-width bars (Tests, Config/env, Docs) span x=40..760 and block all routing through them — including the gap corridor at x=400. **Before writing SVG for a new full-width bar:**
+1. Identify every existing arrow with a vertical segment that passes through the new bar's y-range.
+2. Reroute each such segment through the left or right margin (whichever has more available offsets).
+3. Use ≥8px clearance above and below the new bar when the route cannot go through the margin.
+4. Update the verified routes table below.
+
+The env bar → config line was originally a straight vertical (400,752)→(400,62). When the Tests bar was inserted at y=740..790, it blocked this route, requiring a reroute to the right margin.
 
 ### Verified arrow routes (current)
 ```
@@ -87,7 +118,10 @@ run_eval → eval:       straight left (444,608)→(352,608)
 scripts → ingestion:   (430,546)→(383,546)→(383,82)→(195,82)→(195,90)
 scripts → retrieval:   (430,640)→(375,640)→(375,273)→(195,273)→(195,280)
 eval → generation:     (350,560)→(393,560)→(393,350)→(430,350)
-env bar → config:      straight up (400,752)→(400,62)
+env bar → config:      right margin (760,810)→(769,810)→(769,62)→(400,62)→(400,60)
+tests → ingestion:     left margin  (40,772)→(16,772)→(16,175)→(40,175)  [labeled "integration"]
+tests → retrieval:     left margin  (40,762)→(23,762)→(23,350)→(40,350)
+tests → config:        right margin (760,780)→(777,780)→(777,40)→(520,40)
 ```
 
 ---
@@ -105,15 +139,16 @@ env bar → config:      straight up (400,752)→(400,62)
 1. Decide: new row (extend canvas height) or new column (rare — layout is already two-col)
 2. Assign y range with ~20px gap above and below adjacent layers
 3. Pick a colour from the palette or add a new entry
-4. Plan ALL arrows to/from the new layer through the gap corridor before writing
-5. Add a legend entry
-6. Update viewBox height
+4. Plan ALL arrows to/from the new layer (corridor or margins) before writing
+5. Run the full-width bar insertion checklist if the new layer is full-width
+6. Add a legend entry
+7. Update viewBox height and the row positions table
 
 ### Adding a frontend layer (planned)
 Suggested position: new row above Scripts/Evaluation, or a third column.
 Most natural: a new `FRONTEND` row at col B alongside a new `src/api/` box at col A,
 both sitting between generation (y=280..470) and the current scripts/eval rows.
-This would require shifting scripts/eval/env/docs bars down by ~100px.
+This would require shifting scripts/eval/tests/env/docs bars down by ~100px.
 
 ---
 
