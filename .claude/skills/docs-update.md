@@ -59,6 +59,7 @@ Run all four NEW steps above, then:
 
 5. **SVG diagram** — follow `.claude/skills/diagram-update.md` to regenerate `docs/architecture_gh_opt.svg`.
    - The README already references the SVG by path; no README prose change is needed unless the architecture description paragraph is now factually wrong.
+   - After verifying the SVG looks correct, rebuild the Sphinx HTML with `pixi run -e docs docs` to reflect the change in the docs site.
 
 ---
 
@@ -81,6 +82,7 @@ Run all NEW+SVG steps, then:
 | docs/modules/*.rst automodule | ❌ | ✅ | ✅ | ✅ |
 | docs/usage.rst pixi task docs | if changed | if new task | if new task | if new task |
 | SVG regeneration (diagram-update.md) | ❌ | ❌ | ✅ | ✅ |
+| Sphinx rebuild (pixi run -e docs docs) | ❌ | ❌ | ✅ | ✅ |
 | README.md architecture prose | ❌ | ❌ | ❌ | ✅ (human review) |
 
 ---
@@ -94,3 +96,4 @@ Run all NEW+SVG steps, then:
 - For the TOPOLOGY path, draft the README prose and pause for review — do not write it autonomously.
 - **SVG scope:** the diagram is a full repo map, not a runtime-only architecture diagram. All top-level directories with meaningful content belong in it — `src/`, `scripts/`, `docs/`, `tests/`, `data/`. When in doubt, include it.
 - **`tests/` directory:** adding or completing the pytest suite is a NEW+SVG path (tests block appears in the SVG). No `docs/modules/*.rst` automodule entry — Sphinx autodoc does not document test code.
+- **Sphinx rebuild:** the HTML build in `docs/_build/` is not auto-updated; it must be rebuilt explicitly after source changes. The rebuild step is intentionally manual so the SVG can be verified before the HTML is generated.
