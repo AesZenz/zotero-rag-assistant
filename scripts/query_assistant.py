@@ -32,6 +32,9 @@ from src.ingestion.embedder import SentenceTransformerEmbedder
 from src.retrieval.vector_store import FAISSVectorStore
 from src.retrieval.query_decomposer import decompose_query
 from src.generation.generator import get_generator
+from src.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Defaults
@@ -124,7 +127,7 @@ def run_query(
                 cid = str(chunk.get("chunk_id", id(chunk)))
                 if cid not in seen or chunk.get("score", 0.0) > seen[cid].get("score", 0.0):
                     seen[cid] = chunk
-        results = sorted(seen.values(), key=lambda c: c.get("score", 0.0), reverse=True)[: top_k * 2]
+        results = sorted(seen.values(), key=lambda c: c.get("score", 0.0), reverse=True)
     else:
         results = store.search(embedder.embed_text(question), top_k=top_k)
 
@@ -294,7 +297,7 @@ def main() -> None:
                     cid = str(chunk.get("chunk_id", id(chunk)))
                     if cid not in seen or chunk.get("score", 0.0) > seen[cid].get("score", 0.0):
                         seen[cid] = chunk
-            results = sorted(seen.values(), key=lambda c: c.get("score", 0.0), reverse=True)[: args.top_k * 2]
+            results = sorted(seen.values(), key=lambda c: c.get("score", 0.0), reverse=True)
         else:
             results = store.search(embedder.embed_text(question), top_k=args.top_k)
 
