@@ -18,6 +18,7 @@ from a Zotero library, with support for Claude API and local Ollama backends.
    :maxdepth: 2
    :caption: API Reference
 
+   modules/api
    modules/ingestion
    modules/retrieval
    modules/generation

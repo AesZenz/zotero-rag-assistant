@@ -1,6 +1,6 @@
-<svg width="800" viewBox="0 0 800 960" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+<svg width="800" viewBox="0 0 800 982" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
 
-  <rect width="800" height="960" fill="#ffffff"/>
+  <rect width="800" height="982" fill="#ffffff"/>
 
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -124,10 +124,10 @@
   <rect x="54" y="654" width="282" height="22" rx="5" fill="#fac775" stroke="#854f0b" stroke-width="0.75"/>
   <text x="195" y="665" text-anchor="middle" font-size="10" fill="#633806">data/eval/*.jsonl  |  data/query_logs/*.jsonl</text>
 
-  <!-- SCRIPTS  col B  y=490..720 -->
+  <!-- SCRIPTS  col B  y=490..742 (expanded +22 to fit api/main.py) -->
   <text x="442" y="483" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">SCRIPTS / ENTRY POINTS</text>
-  <rect x="430" y="490" width="330" height="230" rx="10" fill="#faece7" stroke="#993c1d" stroke-width="0.75"/>
-  <text x="595" y="508" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">scripts/</text>
+  <rect x="430" y="490" width="330" height="252" rx="10" fill="#faece7" stroke="#993c1d" stroke-width="0.75"/>
+  <text x="595" y="508" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">scripts/  |  api/</text>
 
   <rect x="444" y="518" width="140" height="56" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
   <text x="514" y="535" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">ingest_papers.py</text>
@@ -156,6 +156,15 @@
   <text x="672" y="655" text-anchor="middle" font-size="10" fill="#712b13">test_claude_</text>
   <text x="672" y="669" text-anchor="middle" font-size="10" fill="#712b13">generation.py</text>
 
+  <!-- api/main.py + sync_zotero.py — y=688..732 -->
+  <rect x="444" y="688" width="140" height="44" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
+  <text x="514" y="705" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">api/main.py</text>
+  <text x="514" y="721" text-anchor="middle" font-size="10" fill="#993c1d">FastAPI /health /ingest…</text>
+
+  <rect x="592" y="688" width="154" height="44" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
+  <text x="669" y="705" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">sync_zotero.py</text>
+  <text x="669" y="721" text-anchor="middle" font-size="10" fill="#993c1d">Zotero → /ingest</text>
+
   <!-- ════ INTER-LAYER ARROWS ════ -->
 
   <!-- scripts → generation: straight up 20px gap -->
@@ -167,7 +176,7 @@
   <!-- scripts → ingestion: corridor x=383 -->
   <path d="M430 546 L383 546 L383 82 L195 82 L195 90" fill="none" stroke="#5f5e5a" stroke-width="1" marker-end="url(#arr)"/>
 
-  <!-- scripts → retrieval: corridor x=375 -->
+  <!-- scripts → retrieval: corridor x=375; exits Scripts at y=640, 48px above api box top (y=688) -->
   <path d="M430 640 L375 640 L375 273 L195 273 L195 280" fill="none" stroke="#5f5e5a" stroke-width="1" marker-end="url(#arr)"/>
 
   <!-- eval → generation: dashed reference, corridor x=393 -->
@@ -179,65 +188,55 @@
        All routes verified outside every box boundary.
   -->
 
-  <!-- tests → ingestion: left margin x=16
-       (40,772)→(16,772): in Tests bar, x=16 clear of all boxes ✓
-       (16,772)→(16,175): x=16 < 40 throughout ✓
-       (16,175)→(40,175): enters Ingestion left edge, y=175 within y=90..260 ✓
-  -->
-  <path d="M40 772 L16 772 L16 175 L40 175" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
-  <text x="9" y="474" text-anchor="middle" font-size="9" fill="#888780" transform="rotate(-90, 9, 474)">integration</text>
+  <!-- tests → ingestion: left margin x=16 -->
+  <path d="M40 794 L16 794 L16 175 L40 175" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+  <text x="9" y="485" text-anchor="middle" font-size="9" fill="#888780" transform="rotate(-90, 9, 485)">integration</text>
 
-  <!-- tests → retrieval: left margin x=23
-       (40,762)→(23,762)→(23,350)→(40,350): x=23 < 40 throughout ✓
-       y=350 within Retrieval y=280..420 ✓
-  -->
-  <path d="M40 762 L23 762 L23 350 L40 350" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+  <!-- tests → retrieval: left margin x=23 -->
+  <path d="M40 784 L23 784 L23 350 L40 350" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
 
-  <!-- tests → config: right margin x=777
-       (760,780)→(777,780)→(777,40)→(520,40): x=777 > 760 throughout ✓
-       y=40 within Config y=20..60, enters at right edge x=520 ✓
-  -->
-  <path d="M760 780 L777 780 L777 40 L520 40" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+  <!-- tests → config: right margin x=777 -->
+  <path d="M760 802 L777 802 L777 40 L520 40" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
 
-  <!-- TESTS BAR  y=740..790 -->
-  <text x="55" y="732" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">TESTS</text>
-  <rect x="40" y="740" width="720" height="50" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
-  <text x="210" y="758" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">tests/</text>
-  <text x="210" y="774" text-anchor="middle" font-size="11" fill="#5f5e5a">pytest · 7 unit modules · 53 tests · ST + Anthropic mocked</text>
-  <text x="600" y="758" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">test_integration.py</text>
-  <text x="600" y="774" text-anchor="middle" font-size="11" fill="#5f5e5a">parse → chunk → filter → embed → FAISS → search</text>
+  <!-- TESTS BAR  y=762..812 -->
+  <text x="55" y="754" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">TESTS</text>
+  <rect x="40" y="762" width="720" height="50" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
+  <text x="210" y="780" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">tests/</text>
+  <text x="210" y="796" text-anchor="middle" font-size="11" fill="#5f5e5a">pytest · 7 unit modules · 53 tests · ST + Anthropic mocked</text>
+  <text x="600" y="780" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">test_integration.py</text>
+  <text x="600" y="796" text-anchor="middle" font-size="11" fill="#5f5e5a">parse → chunk → filter → embed → FAISS → search</text>
 
-  <!-- CONFIG / ENV BAR  y=810..854 -->
-  <text x="55" y="802" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">CONFIG / ENV</text>
-  <rect x="40" y="810" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
-  <text x="220" y="827" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">.env / .env.example</text>
-  <text x="220" y="843" text-anchor="middle" font-size="11" fill="#5f5e5a">23 env vars, source of truth</text>
-  <text x="580" y="827" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">pixi.toml</text>
-  <text x="580" y="843" text-anchor="middle" font-size="11" fill="#5f5e5a">tasks, deps, features</text>
-  <path d="M760 810 L769 810 L769 62 L400 62 L400 60" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+  <!-- CONFIG / ENV BAR  y=832..876 -->
+  <text x="55" y="824" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">CONFIG / ENV</text>
+  <rect x="40" y="832" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
+  <text x="220" y="849" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">.env / .env.example</text>
+  <text x="220" y="865" text-anchor="middle" font-size="11" fill="#5f5e5a">23 env vars, source of truth</text>
+  <text x="580" y="849" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">pixi.toml</text>
+  <text x="580" y="865" text-anchor="middle" font-size="11" fill="#5f5e5a">tasks, deps, features</text>
+  <path d="M760 832 L769 832 L769 62 L400 62 L400 60" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
 
-  <!-- DOCS BAR  y=874..918 -->
-  <text x="55" y="866" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">DOCUMENTATION</text>
-  <rect x="40" y="874" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
-  <text x="210" y="891" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">docs/</text>
-  <text x="210" y="907" text-anchor="middle" font-size="11" fill="#5f5e5a">Sphinx + Shibuya, conf.py, usage.rst, modules/</text>
-  <text x="600" y="891" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">README.md</text>
-  <text x="600" y="907" text-anchor="middle" font-size="11" fill="#5f5e5a">GitHub portfolio docs</text>
+  <!-- DOCS BAR  y=896..940 -->
+  <text x="55" y="888" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">DOCUMENTATION</text>
+  <rect x="40" y="896" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
+  <text x="210" y="913" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">docs/</text>
+  <text x="210" y="929" text-anchor="middle" font-size="11" fill="#5f5e5a">Sphinx + Shibuya, conf.py, usage.rst, modules/</text>
+  <text x="600" y="913" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">README.md</text>
+  <text x="600" y="929" text-anchor="middle" font-size="11" fill="#5f5e5a">GitHub portfolio docs</text>
 
   <!-- LEGEND -->
-  <rect x="40" y="938" width="10" height="10" rx="2" fill="#1D9E75"/>
-  <text x="56" y="947" font-size="10" fill="#444441">ingestion</text>
-  <rect x="125" y="938" width="10" height="10" rx="2" fill="#7F77DD"/>
-  <text x="141" y="947" font-size="10" fill="#444441">retrieval</text>
-  <rect x="210" y="938" width="10" height="10" rx="2" fill="#378ADD"/>
-  <text x="226" y="947" font-size="10" fill="#444441">generation</text>
-  <rect x="315" y="938" width="10" height="10" rx="2" fill="#BA7517"/>
-  <text x="331" y="947" font-size="10" fill="#444441">evaluation</text>
-  <rect x="415" y="938" width="10" height="10" rx="2" fill="#D85A30"/>
-  <text x="431" y="947" font-size="10" fill="#444441">scripts</text>
-  <rect x="482" y="938" width="10" height="10" rx="2" fill="#888780"/>
-  <text x="498" y="947" font-size="10" fill="#444441">config / infra</text>
-  <line x1="590" y1="943" x2="614" y2="943" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3"/>
-  <text x="620" y="947" font-size="10" fill="#444441">reads config</text>
+  <rect x="40" y="960" width="10" height="10" rx="2" fill="#1D9E75"/>
+  <text x="56" y="969" font-size="10" fill="#444441">ingestion</text>
+  <rect x="125" y="960" width="10" height="10" rx="2" fill="#7F77DD"/>
+  <text x="141" y="969" font-size="10" fill="#444441">retrieval</text>
+  <rect x="210" y="960" width="10" height="10" rx="2" fill="#378ADD"/>
+  <text x="226" y="969" font-size="10" fill="#444441">generation</text>
+  <rect x="315" y="960" width="10" height="10" rx="2" fill="#BA7517"/>
+  <text x="331" y="969" font-size="10" fill="#444441">evaluation</text>
+  <rect x="415" y="960" width="10" height="10" rx="2" fill="#D85A30"/>
+  <text x="431" y="969" font-size="10" fill="#444441">scripts</text>
+  <rect x="482" y="960" width="10" height="10" rx="2" fill="#888780"/>
+  <text x="498" y="969" font-size="10" fill="#444441">config / infra</text>
+  <line x1="590" y1="965" x2="614" y2="965" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3"/>
+  <text x="620" y="969" font-size="10" fill="#444441">reads config</text>
 
 </svg>

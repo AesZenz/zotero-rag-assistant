@@ -6,6 +6,72 @@ require ``pixi run -e docs <task>``.
 
 ----
 
+HTTP API Server
+---------------
+
+``api``
+^^^^^^^
+
+.. code-block:: bash
+
+   pixi run api
+
+Starts a FastAPI + Uvicorn server at ``http://localhost:8000``. All heavy
+resources (vector store, embedder, generator) are loaded once at startup via
+FastAPI's lifespan mechanism.
+
+**Endpoints:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Endpoint
+     - Description
+   * - ``GET /health``
+     - Liveness check; returns ``{"status": "ok"}``.
+   * - ``POST /ingest``
+     - Launches ``scripts/ingest_papers.py --resume`` as a background
+       subprocess and returns immediately — the embedding run can take minutes
+       on CPU and the caller does not need to wait.
+   * - ``POST /query``
+     - Accepts JSON body ``{"query": "...", "top_k": 5}``. Embeds the query,
+       searches the FAISS index, generates an answer via the configured
+       backend, and returns ``{"answer": "...", "cost_usd": 0.0, "model": "..."}``.
+
+**Prerequisites:** A populated FAISS index in ``DATA_DIR`` (run
+``pixi run ingest`` first).
+
+``sync-zotero``
+^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   pixi run sync-zotero
+
+Reads Zotero's local SQLite database at ``~/Zotero/zotero.sqlite`` (in
+read-only mode), queries the ``Psy/Neuroscience/AI`` collection for PDF
+attachments, copies any files not already present in ``PDF_LIBRARY_PATH``,
+and then POSTs to ``http://localhost:8000/ingest`` if new PDFs were copied.
+
+**Relevant environment variables:**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Variable
+     - Description
+   * - ``PDF_LIBRARY_PATH``
+     - Destination directory where synced PDFs are written.
+
+**Prerequisites:** ``PDF_LIBRARY_PATH`` set in ``.env``. For automatic
+re-ingestion, the API server (``pixi run api``) must be running before this
+task is invoked — if not reachable, the sync still copies files but prints a
+warning instead of failing.
+
+----
+
 Ingestion
 ---------
 

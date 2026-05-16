@@ -63,7 +63,9 @@ All layers are independently testable. The pipeline was built one component at a
 | Query CLI | `scripts/query_assistant.py` | ✅ complete |
 | Bulk ingestion script | `scripts/ingest_papers.py` | ✅ complete |
 | Evaluation module | `src/evaluation/` | ✅ complete |
-| Pytest test suite | `tests/` | ⚠️ generated, not yet verified |
+| Pytest test suite | `tests/` | ✅ complete |
+| FastAPI HTTP server | `api/main.py` | ✅ complete |
+| Zotero sync script | `scripts/sync_zotero.py` | ✅ complete |
 
 ---
 
@@ -80,6 +82,29 @@ cp .env.example .env
 # edit .env with your API key and PDF path
 pixi install
 ```
+
+### Start the HTTP API server
+
+```bash
+pixi run api
+```
+
+Starts a FastAPI server at `http://localhost:8000` with three endpoints:
+- `GET /health` — liveness check
+- `POST /ingest` — fires off `ingest_papers.py --resume` as a background subprocess (returns immediately)
+- `POST /query` — embeds the query, retrieves chunks, generates an answer; body: `{"query": "...", "top_k": 5}`
+
+**Prerequisites:** A populated FAISS index in `DATA_DIR`.
+
+### Sync new PDFs from Zotero
+
+```bash
+pixi run sync-zotero
+```
+
+Reads Zotero's local SQLite database (read-only), finds new PDFs in the `Psy/Neuroscience/AI` collection that aren't yet in `PDF_LIBRARY_PATH`, copies them over, and triggers `/ingest` via HTTP if any were added.
+
+**Prerequisites:** `PDF_LIBRARY_PATH` set in `.env`; the API server (`pixi run api`) must be running for ingest to be triggered automatically.
 
 ### Ingest the full library
 ```bash
@@ -147,7 +172,7 @@ QUERY_DECOMPOSITION_MODEL=claude-haiku-4-5-20251001
 
 ## Testing
 
-A pytest suite was generated covering all core modules. It has not yet been manually reviewed.
+A pytest suite covers all core modules. 53 tests, all passing and manually verified.
 
 ```bash
 # Unit tests only (excludes integration test)

@@ -50,6 +50,10 @@ numpy = ">=1.24.0,<2.0.0"
 scikit-learn = ">=1.3.0"
 nltk = ">=3.8.0"
 
+# API
+fastapi = ">=0.111.0"
+uvicorn = {version = ">=0.29.0", extras = ["standard"]}
+
 # Development & Testing
 pytest = ">=7.4.0"
 pytest-cov = ">=4.1.0"
@@ -83,6 +87,8 @@ test-chunker = "PYTHONPATH=. python scripts/test_chunker.py"
 test-embedder = "PYTHONPATH=. python scripts/test_embedder.py"
 test-vector-store = "PYTHONPATH=. python scripts/test_vector_store.py"
 notebook = "jupyter lab notebooks/"
+api = "PYTHONPATH=. uvicorn api.main:app --reload"
+sync-zotero = "PYTHONPATH=. python scripts/sync_zotero.py"
 check = { depends-on = ["format", "lint", "test"] }
 
 [feature.docs.pypi-dependencies]
