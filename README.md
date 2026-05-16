@@ -213,4 +213,3 @@ pixi run test-cov
 ## Known Limitations
 
 - HTML web snapshots in Zotero exports are silently skipped (PDF parser only)
-- Pytest suite was generated but not yet manually verified — treat results with appropriate caution
