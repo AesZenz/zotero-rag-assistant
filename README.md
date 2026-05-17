@@ -66,6 +66,7 @@ All layers are independently testable. The pipeline was built one component at a
 | Pytest test suite | `tests/` | ✅ complete |
 | FastAPI HTTP server | `api/main.py` | ✅ complete |
 | Zotero sync script | `scripts/sync_zotero.py` | ✅ complete |
+| n8n automation workflow | `integrations/n8n/zotero_sync.json` | ✅ complete |
 
 ---
 
@@ -95,6 +96,8 @@ Starts a FastAPI server at `http://localhost:8000` with three endpoints:
 - `POST /query` — embeds the query, retrieves chunks, generates an answer; body: `{"query": "...", "top_k": 5}`
 
 **Prerequisites:** A populated FAISS index in `DATA_DIR`.
+
+> The API server and n8n start automatically on login via launchd — see [Background Services](#background-services) below.
 
 ### Sync new PDFs from Zotero
 
@@ -200,6 +203,29 @@ pixi run test-cov
 
 > The integration test uses a deterministic mock embedder so no real model is loaded.
 > `OMP_NUM_THREADS=1` is set in `conftest.py` to prevent the PyTorch OpenMP bug on Intel Mac.
+
+---
+
+## Background Services
+
+The API server and n8n are both configured as launchd user agents so they start automatically on login and restart if they crash.
+
+### n8n workflow automation
+
+An n8n workflow (`integrations/n8n/zotero_sync.json`) runs daily at 6pm and POSTs to `http://127.0.0.1:8000/ingest`, triggering the full Zotero → PDF copy → re-index pipeline with no manual intervention. To view or edit the workflow, open the n8n editor at `http://localhost:5678`.
+
+To import the workflow into a fresh n8n instance: open the editor → **Workflows** → **Import from file** → select `integrations/n8n/zotero_sync.json`.
+
+### Managing launchd services
+
+| Service | plist | Disable | Re-enable |
+|---|---|---|---|
+| FastAPI server | `com.zotero-rag.api.plist` | `launchctl unload ~/Library/LaunchAgents/com.zotero-rag.api.plist` | `launchctl load ~/Library/LaunchAgents/com.zotero-rag.api.plist` |
+| n8n | `com.zotero-rag.n8n.plist` | `launchctl unload ~/Library/LaunchAgents/com.zotero-rag.n8n.plist` | `launchctl load ~/Library/LaunchAgents/com.zotero-rag.n8n.plist` |
+
+Logs are written to `~/Library/Logs/`:
+- `zotero-rag-api.stdout.log` / `zotero-rag-api.stderr.log`
+- `zotero-rag-n8n.stdout.log` / `zotero-rag-n8n.stderr.log`
 
 ---
 

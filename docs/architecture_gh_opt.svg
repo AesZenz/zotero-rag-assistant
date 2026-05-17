@@ -1,6 +1,6 @@
-<svg width="800" viewBox="0 0 800 982" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+<svg width="800" viewBox="0 0 800 1040" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
 
-  <rect width="800" height="982" fill="#ffffff"/>
+  <rect width="800" height="1040" fill="#ffffff"/>
 
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -223,20 +223,28 @@
   <text x="600" y="913" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">README.md</text>
   <text x="600" y="929" text-anchor="middle" font-size="11" fill="#5f5e5a">GitHub portfolio docs</text>
 
+  <!-- AUTOMATION BAR  y=960..1004 -->
+  <text x="55" y="952" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">AUTOMATION / BACKGROUND SERVICES</text>
+  <rect x="40" y="960" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
+  <text x="215" y="977" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">launchd (LaunchAgents/)</text>
+  <text x="215" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">api.plist + n8n.plist · starts on login · KeepAlive</text>
+  <text x="575" y="977" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">integrations/n8n/zotero_sync.json</text>
+  <text x="575" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">Schedule Trigger daily 6pm → POST /ingest</text>
+
   <!-- LEGEND -->
-  <rect x="40" y="960" width="10" height="10" rx="2" fill="#1D9E75"/>
-  <text x="56" y="969" font-size="10" fill="#444441">ingestion</text>
-  <rect x="125" y="960" width="10" height="10" rx="2" fill="#7F77DD"/>
-  <text x="141" y="969" font-size="10" fill="#444441">retrieval</text>
-  <rect x="210" y="960" width="10" height="10" rx="2" fill="#378ADD"/>
-  <text x="226" y="969" font-size="10" fill="#444441">generation</text>
-  <rect x="315" y="960" width="10" height="10" rx="2" fill="#BA7517"/>
-  <text x="331" y="969" font-size="10" fill="#444441">evaluation</text>
-  <rect x="415" y="960" width="10" height="10" rx="2" fill="#D85A30"/>
-  <text x="431" y="969" font-size="10" fill="#444441">scripts</text>
-  <rect x="482" y="960" width="10" height="10" rx="2" fill="#888780"/>
-  <text x="498" y="969" font-size="10" fill="#444441">config / infra</text>
-  <line x1="590" y1="965" x2="614" y2="965" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3"/>
-  <text x="620" y="969" font-size="10" fill="#444441">reads config</text>
+  <rect x="40" y="1022" width="10" height="10" rx="2" fill="#1D9E75"/>
+  <text x="56" y="1031" font-size="10" fill="#444441">ingestion</text>
+  <rect x="125" y="1022" width="10" height="10" rx="2" fill="#7F77DD"/>
+  <text x="141" y="1031" font-size="10" fill="#444441">retrieval</text>
+  <rect x="210" y="1022" width="10" height="10" rx="2" fill="#378ADD"/>
+  <text x="226" y="1031" font-size="10" fill="#444441">generation</text>
+  <rect x="315" y="1022" width="10" height="10" rx="2" fill="#BA7517"/>
+  <text x="331" y="1031" font-size="10" fill="#444441">evaluation</text>
+  <rect x="415" y="1022" width="10" height="10" rx="2" fill="#D85A30"/>
+  <text x="431" y="1031" font-size="10" fill="#444441">scripts</text>
+  <rect x="482" y="1022" width="10" height="10" rx="2" fill="#888780"/>
+  <text x="498" y="1031" font-size="10" fill="#444441">config / infra</text>
+  <line x1="590" y1="1027" x2="614" y2="1027" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3"/>
+  <text x="620" y="1031" font-size="10" fill="#444441">reads config</text>
 
 </svg>

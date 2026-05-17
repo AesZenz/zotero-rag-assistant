@@ -29,11 +29,12 @@ Updating `docs/architecture_gh_opt.svg` in the zotero-rag-assistant repo when ne
 | Retrieval | y=280..420 | A |
 | Generation | y=280..470 | B |
 | Evaluation | y=490..720 | A |
-| Scripts | y=490..720 | B |
-| Tests bar | y=740..790 | full width (x=40..760) |
-| Config/env bar | y=810..854 | full width (x=40..760) |
-| Docs bar | y=874..918 | full width (x=40..760) |
-| Legend | y=938 | full width |
+| Scripts | y=490..742 | B |
+| Tests bar | y=762..812 | full width (x=40..760) |
+| Config/env bar | y=832..876 | full width (x=40..760) |
+| Docs bar | y=896..940 | full width (x=40..760) |
+| Automation bar | y=960..1004 | full width (x=40..760) |
+| Legend | y=1022 | full width |
 
 ---
 
