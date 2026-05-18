@@ -117,9 +117,9 @@
   <text x="267" y="564" text-anchor="middle" font-size="10" fill="#854f0b">Precision/Recall/MRR</text>
 
   <rect x="54" y="586" width="282" height="56" rx="6" fill="#fac775" stroke="#854f0b" stroke-width="0.75"/>
-  <text x="195" y="603" text-anchor="middle" font-size="12" font-weight="600" fill="#633806">ragas_evaluator.py</text>
-  <text x="195" y="618" text-anchor="middle" font-size="10" fill="#854f0b">faithfulness scoring</text>
-  <text x="195" y="632" text-anchor="middle" font-size="10" fill="#854f0b">(Claude-as-judge fallback)</text>
+  <text x="195" y="603" text-anchor="middle" font-size="12" font-weight="600" fill="#633806">answer_evaluator.py</text>
+  <text x="195" y="618" text-anchor="middle" font-size="10" fill="#854f0b">faithfulness + answer_relevancy</text>
+  <text x="195" y="632" text-anchor="middle" font-size="10" fill="#854f0b">(Claude-as-judge)</text>
 
   <rect x="54" y="654" width="282" height="22" rx="5" fill="#fac775" stroke="#854f0b" stroke-width="0.75"/>
   <text x="195" y="665" text-anchor="middle" font-size="10" fill="#633806">data/eval/*.jsonl  |  data/query_logs/*.jsonl</text>

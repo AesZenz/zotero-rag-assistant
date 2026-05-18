@@ -88,18 +88,15 @@ def _print_answer_summary(results: list[dict]) -> None:
     if not results:
         return
     n = len(results)
-    avg_faith = sum(r.get("faithfulness", 0.0) for r in results) / n
+    avg_faith = sum(r.get("faithfulness",     0.0) for r in results) / n
+    avg_rel   = sum(r.get("answer_relevancy", 0.0) for r in results) / n
     print()
     print("=" * 52)
     print("  Answer Quality Results")
     print("=" * 52)
     print(f"  Questions evaluated  : {n}")
     print(f"  Avg faithfulness     : {avg_faith:.4f}")
-    if "answer_relevancy" in results[0]:
-        avg_rel = sum(r.get("answer_relevancy",  0.0) for r in results) / n
-        avg_cp  = sum(r.get("context_precision", 0.0) for r in results) / n
-        print(f"  Avg answer relevancy : {avg_rel:.4f}")
-        print(f"  Avg context precision: {avg_cp:.4f}")
+    print(f"  Avg answer relevancy : {avg_rel:.4f}")
     print("=" * 52)
     print()
 
@@ -167,7 +164,7 @@ def main() -> None:
     answer_results: list[dict] = []
     if args.full:
         from src.generation.generator import get_generator
-        from src.evaluation.ragas_evaluator import evaluate_answers
+        from src.evaluation.answer_evaluator import evaluate_answers
         print("Initialising generator for answer evaluation…")
         generator = get_generator()
         print(f"  Generator: {generator.model}")

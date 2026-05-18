@@ -11,10 +11,10 @@ Question Generator
    :undoc-members:
    :show-inheritance:
 
-Answer Quality (RAGAS / Claude Judge)
---------------------------------------
+Answer Quality (Claude Judge)
+-----------------------------
 
-.. automodule:: src.evaluation.ragas_evaluator
+.. automodule:: src.evaluation.answer_evaluator
    :members:
    :undoc-members:
    :show-inheritance:

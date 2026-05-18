@@ -43,7 +43,6 @@ RAG system for querying ~600 academic PDFs. Learning project — build with unde
 ## What's Missing (next steps)
 
 1. Pytest suite (`tests/` — generated but not verified)
-2. RAGAS evaluation path (requires `ragas` package — not installed; Claude-as-judge fallback runs instead)
 
 ## Do Not
 
