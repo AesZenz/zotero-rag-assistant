@@ -229,11 +229,11 @@ Logs are written to `~/Library/Logs/`:
 
 ---
 
-## Planned: Phase 2
+## Ideas for further improvements
 
 - **Verify and expand test suite** — manual review of generated tests; add edge cases as gaps are found
-- **Reranking** — cross-encoder reranking post-retrieval for higher precision
-
+- **Reranking** — cross-encoder reranking post-retrieval for higher precision (though for the current DB size, precision is good enough)
+- **Matryoshka Embeddings** - Deferred for now; maybe worth considering if index grows to 100K+ vectors (currently ~30K vectors in FAISS index) and two-stage retrieval needs to be considered for better latency.
 ---
 
 ## Known Limitations
