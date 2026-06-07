@@ -71,6 +71,19 @@ async def ingest():
     return {"status": "started"}
 
 
+@app.post("/sync")
+async def sync():
+    # Runs sync_zotero.py, which copies new PDFs then internally POSTs to /ingest.
+    env = {**os.environ, "PYTHONPATH": "."}
+    subprocess.Popen(
+        [sys.executable, "scripts/sync_zotero.py"],
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return {"status": "started"}
+
+
 @app.post("/query")
 async def query(body: QueryRequest, request: Request):
     store: FAISSVectorStore = request.app.state.store

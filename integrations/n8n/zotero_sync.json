@@ -7,7 +7,8 @@
           "interval": [
             {
               "triggerAtHour": 18
-            }
+            },
+            {}
           ]
         }
       },
@@ -23,7 +24,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://127.0.0.1:8000/ingest",
+        "url": "http://127.0.0.1:8000/sync",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -32,7 +33,7 @@
         208,
         0
       ],
-      "id": "ddadae9e-7f82-412e-bfee-36e330633309",
+      "id": "599e0166-01a9-473b-81bf-9b689c7fca89",
       "name": "HTTP Request"
     }
   ],
@@ -50,13 +51,16 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Budapest",
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "0d35e198-b37e-4e9c-a0c3-7d679ae7ed7b",
+  "versionId": "874d37fb-95c3-4322-aa30-712e648efa4f",
   "meta": {
     "instanceId": "cb073b28d1e2a597bcced8c1bf4c8e04b1265c44350b32fad9c89971ef1ea528"
   },
