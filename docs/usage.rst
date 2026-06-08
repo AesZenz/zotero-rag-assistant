@@ -34,6 +34,10 @@ FastAPI's lifespan mechanism.
      - Launches ``scripts/ingest_papers.py --resume`` as a background
        subprocess and returns immediately — the embedding run can take minutes
        on CPU and the caller does not need to wait.
+   * - ``POST /sync``
+     - Runs ``scripts/sync_zotero.py`` as a background subprocess (copies new
+       PDFs from Zotero, then triggers ``/ingest``). Used by the n8n automation
+       workflow.
    * - ``POST /query``
      - Accepts JSON body ``{"query": "...", "top_k": 5}``. Embeds the query,
        searches the FAISS index, generates an answer via the configured
@@ -238,7 +242,7 @@ Runs the full RAG evaluation pipeline:
    index, and checks whether the source chunk appears in the top-K results.
    Computes Precision\@K, Recall\@K, and MRR.
 2. **Answer quality** — generates an answer for each question and scores it
-   with RAGAS (if installed) or Claude-as-judge faithfulness scoring.
+   with Claude-as-judge (faithfulness + answer relevancy).
 
 Results are printed to the terminal and saved to ``data/eval/``.
 

@@ -159,7 +159,7 @@
   <!-- api/main.py + sync_zotero.py — y=688..732 -->
   <rect x="444" y="688" width="140" height="44" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
   <text x="514" y="705" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">api/main.py</text>
-  <text x="514" y="721" text-anchor="middle" font-size="10" fill="#993c1d">FastAPI /health /ingest…</text>
+  <text x="514" y="721" text-anchor="middle" font-size="10" fill="#993c1d">FastAPI /health /sync /query…</text>
 
   <rect x="592" y="688" width="154" height="44" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
   <text x="669" y="705" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">sync_zotero.py</text>
@@ -229,7 +229,7 @@
   <text x="215" y="977" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">launchd (LaunchAgents/)</text>
   <text x="215" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">api.plist + n8n.plist · starts on login · KeepAlive</text>
   <text x="575" y="977" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">integrations/n8n/zotero_sync.json</text>
-  <text x="575" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">Schedule Trigger daily 6pm → POST /ingest</text>
+  <text x="575" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">Schedule Trigger daily 6pm → POST /sync</text>
 
   <!-- LEGEND -->
   <rect x="40" y="1022" width="10" height="10" rx="2" fill="#1D9E75"/>

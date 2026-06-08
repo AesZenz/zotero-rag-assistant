@@ -90,9 +90,10 @@ pixi install
 pixi run api
 ```
 
-Starts a FastAPI server at `http://localhost:8000` with three endpoints:
+Starts a FastAPI server at `http://localhost:8000` with four endpoints:
 - `GET /health` — liveness check
 - `POST /ingest` — fires off `ingest_papers.py --resume` as a background subprocess (returns immediately)
+- `POST /sync` — runs `sync_zotero.py` (copies new PDFs from Zotero, then triggers `/ingest`); used by the n8n workflow
 - `POST /query` — embeds the query, retrieves chunks, generates an answer; body: `{"query": "...", "top_k": 5}`
 
 **Prerequisites:** A populated FAISS index in `DATA_DIR`.
@@ -212,7 +213,7 @@ The API server and n8n are both configured as launchd user agents so they start 
 
 ### n8n workflow automation
 
-An n8n workflow (`integrations/n8n/zotero_sync.json`) runs daily at 6pm and POSTs to `http://127.0.0.1:8000/ingest`, triggering the full Zotero → PDF copy → re-index pipeline with no manual intervention. To view or edit the workflow, open the n8n editor at `http://localhost:5678`.
+An n8n workflow (`integrations/n8n/zotero_sync.json`) runs daily at 6pm and POSTs to `http://127.0.0.1:8000/sync`, triggering the full Zotero → PDF copy → re-index pipeline with no manual intervention. To view or edit the workflow, open the n8n editor at `http://localhost:5678`.
 
 To import the workflow into a fresh n8n instance: open the editor → **Workflows** → **Import from file** → select `integrations/n8n/zotero_sync.json`.
 
