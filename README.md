@@ -116,7 +116,7 @@ Reads Zotero's local SQLite database (read-only), finds new PDFs in the `Psy/Neu
 pixi run ingest-library
 
 # Resume an interrupted run (skips already-indexed papers)
-pixi run ingest-library -- --resume
+pixi run ingest-library --resume
 ```
 > Note: `OMP_NUM_THREADS=1` is set automatically inside the script to prevent a PyTorch 2.2.x OpenMP threading bug on Intel Mac.
 
@@ -138,8 +138,8 @@ pixi run query-ollama
 QUERY_DECOMPOSITION=true pixi run query "your question here"
 QUERY_DECOMPOSITION=true pixi run query-ollama "your question here"
 
-# Pass additional options via -- separator
-pixi run query -- --top-k 8 --max-tokens 600 --verbose "your question"
+# Pass additional options directly (no `--` — pixi forwards args as-is)
+pixi run query --top-k 8 --max-tokens 600 --verbose "your question"
 ```
 
 ---

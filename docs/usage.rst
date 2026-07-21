@@ -33,7 +33,14 @@ FastAPI's lifespan mechanism.
    * - ``POST /ingest``
      - Launches ``scripts/ingest_papers.py --resume`` as a background
        subprocess and returns immediately — the embedding run can take minutes
-       on CPU and the caller does not need to wait.
+       on CPU and the caller does not need to wait. When the run finishes and
+       new papers were added, the script POSTs to ``/reload`` itself so the
+       fresh index becomes queryable without a restart.
+   * - ``POST /reload``
+     - Re-reads the FAISS index from disk into memory and returns
+       ``{"status": "reloaded", "vectors": N}``. Called automatically at the end
+       of an ingest; also safe to call by hand to pick up an index rebuilt out
+       of band.
    * - ``POST /sync``
      - Runs ``scripts/sync_zotero.py`` as a background subprocess (copies new
        PDFs from Zotero, then triggers ``/ingest``). Used by the n8n automation

@@ -53,7 +53,10 @@ def chunk_text(
         logger.warning("chunk_text received empty or whitespace-only text")
         return []
 
-    tokens = _ENCODING.encode(text)
+    # disallowed_special=(): encode special-token strings (e.g. '<|endoftext|>'
+    # that appear literally in LLM/tokenizer papers) as normal text instead of
+    # raising. tiktoken here is only for chunk sizing, never fed to a model.
+    tokens = _ENCODING.encode(text, disallowed_special=())
     total_tokens = len(tokens)
     logger.debug("Encoded text: %d tokens", total_tokens)
 

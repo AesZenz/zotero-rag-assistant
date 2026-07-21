@@ -28,10 +28,13 @@ from src.retrieval.vector_store import FAISSVectorStore
 # Lifespan — load all heavy resources exactly once at startup
 # ---------------------------------------------------------------------------
 
+def _index_path() -> str:
+    return str(Path(settings.data_dir) / "paper_index.faiss")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    index_path = str(Path(settings.data_dir) / "paper_index.faiss")
-    app.state.store = FAISSVectorStore.load(index_path)
+    app.state.store = FAISSVectorStore.load(_index_path())
     app.state.embedder = SentenceTransformerEmbedder(settings.embedding_model)
     app.state.generator = get_generator()
     yield
@@ -82,6 +85,15 @@ async def sync():
         stderr=subprocess.DEVNULL,
     )
     return {"status": "started"}
+
+
+@app.post("/reload")
+async def reload(request: Request):
+    # Re-read the on-disk index into memory. Called after a background ingest so
+    # newly embedded papers become queryable without restarting the server.
+    store = FAISSVectorStore.load(_index_path())
+    request.app.state.store = store
+    return {"status": "reloaded", "vectors": store.size}
 
 
 @app.post("/query")

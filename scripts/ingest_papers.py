@@ -32,6 +32,7 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 from src.config import settings  # noqa: E402
 
 import numpy as np  # noqa: E402
+import requests  # noqa: E402
 from tqdm import tqdm  # noqa: E402
 
 from src.ingestion.chunker import chunk_document  # noqa: E402
@@ -123,6 +124,20 @@ def _flush_buffer(
         len(buffer), elapsed, store.size,
     )
     buffer.clear()
+
+
+def _notify_reload() -> None:
+    """Best-effort: tell a running API to reload the fresh index into memory.
+
+    No-op when the API is down (manual CLI runs) — the next server start reads
+    the new index anyway. Swallows all request errors so ingestion never fails
+    just because nothing is listening.
+    """
+    try:
+        requests.post("http://localhost:8000/reload", timeout=5)
+        logger.info("Notified API to reload index.")
+    except requests.RequestException as exc:
+        logger.info("Reload notify skipped (API not reachable): %s", exc)
 
 
 def _checkpoint_save(store: FAISSVectorStore, output_path: Path, papers_done: int) -> None:
@@ -294,6 +309,11 @@ def ingest(
         store.save(str(output_path))
     else:
         logger.warning("Index is empty — nothing to save")
+
+    # Reload the live API only when new papers were actually added; a no-op
+    # resume leaves the on-disk index unchanged, so there is nothing to refresh.
+    if stats.processed > 0:
+        _notify_reload()
 
     _print_summary(stats, store, output_path, total)
 

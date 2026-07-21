@@ -6,6 +6,7 @@ RAG system for querying ~600 academic PDFs. Learning project — build with unde
 
 - **Task runner**: pixi only. Never suggest `pip install` or bare `python` calls.
 - **Run scripts**: always `PYTHONPATH=. python scripts/...` or `pixi run <task>`.
+- **pixi args**: pass task args directly (`pixi run ingest-library --resume`). Never use `--` — pixi has no separator convention and forwards `--` as a literal arg, which argparse rejects (`unrecognized arguments: -- --resume`).
 - **Config**: all env vars come from `src/config.py` (`Settings(BaseSettings)`). No `os.getenv()` calls — use `settings.<field>`.
 - **dotenv**: Pydantic reads `.env` directly. Never add `load_dotenv()`.
 - **Import ordering constraint**: if a script overrides `os.environ` before src imports (e.g. `LOG_FILE`, `OMP_NUM_THREADS`), `from src.config import settings` must come *after* those overrides.
