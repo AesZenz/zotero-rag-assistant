@@ -90,10 +90,11 @@ pixi install
 pixi run api
 ```
 
-Starts a FastAPI server at `http://localhost:8000` with four endpoints:
+Starts a FastAPI server at `http://localhost:8000` with five endpoints:
 - `GET /health` — liveness check
 - `POST /ingest` — fires off `ingest_papers.py --resume` as a background subprocess (returns immediately)
 - `POST /sync` — runs `sync_zotero.py` (copies new PDFs from Zotero, then triggers `/ingest`); used by the n8n workflow
+- `POST /reload` — re-reads the on-disk FAISS index into memory; called automatically after a background ingest so new papers become queryable without restarting the server
 - `POST /query` — embeds the query, retrieves chunks, generates an answer; body: `{"query": "...", "top_k": 5}`
 
 **Prerequisites:** A populated FAISS index in `DATA_DIR`.
@@ -156,7 +157,7 @@ PDF_LIBRARY_PATH=/path/to/zotero/folder
 CHUNK_SIZE=512
 CHUNK_OVERLAP=50
 TOP_K_CHUNKS=5
-MAX_TOKENS_PER_RESPONSE=1000
+MAX_TOKENS_PER_RESPONSE=500
 USE_LOCAL_EMBEDDINGS=true
 QUERY_DECOMPOSITION=false        # set true to split complex queries into sub-questions
 QUERY_DECOMPOSITION_MODEL=claude-haiku-4-5-20251001
@@ -176,7 +177,7 @@ QUERY_DECOMPOSITION_MODEL=claude-haiku-4-5-20251001
 
 ## Testing
 
-A pytest suite covers all core modules. 53 tests, all passing and manually verified.
+A pytest suite covers all core modules. 57 tests, all passing and manually verified.
 
 ```bash
 # Unit tests only (excludes integration test)
@@ -200,6 +201,7 @@ pixi run test-cov
 | `test_vector_store.py` | Add/search correctness, top-k, score ordering, save/load round-trip, dimension mismatch |
 | `test_config.py` | Env-var override, field types, `ValidationError` on invalid input |
 | `test_query_decomposer.py` | Valid JSON parsing, malformed/empty fallback to original query (Anthropic mocked) |
+| `test_query_pipeline.py` | Decomposition retrieval budget: full `top_k` per sub-question, dedup keeps max score, descending sort |
 | `test_integration.py` | Full parse → chunk → filter → embed → FAISS → search round-trip (`@pytest.mark.integration`) |
 
 > The integration test uses a deterministic mock embedder so no real model is loaded.

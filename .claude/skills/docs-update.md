@@ -24,8 +24,11 @@ If unsure, ask before proceeding.
 
 1. **`PROJECT_STATUS.md`** — add a dated entry to Update Log; update Current State paragraph if behaviour changed.
 2. **`docs/usage.rst`** — update task documentation if a pixi task's flags, env vars, or prerequisites changed.
+3. **`README.md`** — only if the change alters user-visible surface: the API endpoint list, a pixi task's flags, an env var name or default, or the test count. Otherwise skip.
 
 Stop here. No other files need touching.
+
+> A fix can change public surface without being NEW — e.g. adding an endpoint to `api/main.py` touches no new file but does invalidate the README endpoint list. Check step 3 before stopping.
 
 ---
 
@@ -77,6 +80,7 @@ Run all NEW+SVG steps, then:
 |---|---|---|---|---|
 | PROJECT_STATUS.md update log + current state | ✅ | ✅ | ✅ | ✅ |
 | PROJECT_STATUS.md What's Built table | ❌ | ✅ | ✅ | ✅ |
+| README.md user-visible surface (endpoints, env vars, test count) | if changed | if changed | if changed | if changed |
 | README.md What's Built table | ❌ | ✅ | ✅ | ✅ |
 | README.md pixi task docs | ❌ | if new task | if new task | if new task |
 | docs/modules/*.rst automodule | ❌ | ✅ | ✅ | ✅ |
@@ -95,5 +99,5 @@ Run all NEW+SVG steps, then:
 - The SVG step is self-contained in `diagram-update.md`; do not inline SVG editing here.
 - For the TOPOLOGY path, draft the README prose and pause for review — do not write it autonomously.
 - **SVG scope:** the diagram is a full repo map, not a runtime-only architecture diagram. All top-level directories with meaningful content belong in it — `src/`, `scripts/`, `docs/`, `tests/`, `data/`. When in doubt, include it.
-- **`tests/` directory:** adding or completing the pytest suite is a NEW+SVG path (tests block appears in the SVG). No `docs/modules/*.rst` automodule entry — Sphinx autodoc does not document test code.
+- **`tests/` directory:** adding or completing the pytest suite is a NEW+SVG path (tests block appears in the SVG). No `docs/modules/*.rst` automodule entry — Sphinx autodoc does not document test code. Adding or removing a test file also means updating the README Testing section: both the total test count and the coverage table row.
 - **Sphinx rebuild:** the HTML build in `docs/_build/` is not auto-updated; it must be rebuilt explicitly after source changes. The rebuild step is intentionally manual so the SVG can be verified before the HTML is generated.
