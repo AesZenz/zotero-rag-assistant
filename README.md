@@ -1,5 +1,7 @@
 # Zotero RAG Assistant
 
+![Tests](https://github.com/AesZenz/zotero-rag-assistant/actions/workflows/tests.yml/badge.svg)
+
 A retrieval-augmented generation (RAG) system for querying a personal Zotero research library (~600 papers, mainly from psychology and neuroscience) using local embeddings and the Claude API. Built as a learning project to understand RAG architecture from the ground up — each component was implemented independently before any orchestration layer was introduced.
 
 ---
@@ -67,6 +69,7 @@ All layers are independently testable. The pipeline was built one component at a
 | FastAPI HTTP server | `api/main.py` | ✅ complete |
 | Zotero sync script | `scripts/sync_zotero.py` | ✅ complete |
 | n8n automation workflow | `integrations/n8n/zotero_sync.json` | ✅ complete |
+| CI test workflow | `.github/workflows/tests.yml` | ✅ complete |
 
 ---
 
@@ -206,6 +209,10 @@ pixi run test-cov
 
 > The integration test uses a deterministic mock embedder so no real model is loaded.
 > `OMP_NUM_THREADS=1` is set in `conftest.py` to prevent the PyTorch OpenMP bug on Intel Mac.
+
+### Continuous integration
+
+`.github/workflows/tests.yml` runs both suites on GitHub Actions — `unit` (`pixi run test`) and `integration` (`pixi run test-all`) as parallel `ubuntu-latest` jobs — on every pull request and on pushes to `main` that touch `src/**`, `tests/**`, or the pixi manifests. No secrets are configured: `sentence_transformers` and `anthropic.Anthropic` are mocked in the tests and every `Settings` field has a default, so the suite runs without an API key or a `.env` file.
 
 ---
 
