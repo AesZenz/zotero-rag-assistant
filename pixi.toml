@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "RAG system for scientific papers using Claude API and local embeddings"
 authors = ["AesZenz <your.email@example.com>"]
 channels = ["conda-forge"]
-platforms = ["osx-64", "osx-arm64"]
+platforms = ["osx-64", "osx-arm64", "linux-64"]
 
 [dependencies]
 python = ">=3.10,<3.13"
@@ -99,6 +99,16 @@ shibuya = ">=2024.1"
 [feature.docs.tasks]
 docs = "sphinx-build -b html docs/ docs/_build/html"
 
+[feature.notebooks.pypi-dependencies]
+langchain = ">=0.1.0"
+langchain-community = ">=0.0.20"
+langchain-anthropic = ">=0.1.0"
+langchain-huggingface = ">=0.0.1"
+langchain-text-splitters = ">=0.0.1"
+jupyter = ">=1.0.0"
+ipykernel = ">=6.27.0"
+
 [environments]
 default = { solve-group = "default" }
 docs = { features = ["docs"], solve-group = "default" }
+notebooks = { features = ["notebooks"], solve-group = "default" }

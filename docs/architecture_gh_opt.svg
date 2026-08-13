@@ -1,6 +1,6 @@
-<svg width="800" viewBox="0 0 800 1040" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+<svg width="800" viewBox="0 0 800 1104" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
 
-  <rect width="800" height="1040" fill="#ffffff"/>
+  <rect width="800" height="1104" fill="#ffffff"/>
 
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -156,14 +156,15 @@
   <text x="672" y="655" text-anchor="middle" font-size="10" fill="#712b13">test_claude_</text>
   <text x="672" y="669" text-anchor="middle" font-size="10" fill="#712b13">generation.py</text>
 
-  <!-- api/main.py + sync_zotero.py — y=688..732 -->
-  <rect x="444" y="688" width="140" height="44" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
-  <text x="514" y="705" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">api/main.py</text>
-  <text x="514" y="721" text-anchor="middle" font-size="10" fill="#993c1d">FastAPI /health /sync /query…</text>
+  <!-- api/main.py + sync_zotero.py — y=684..736 (taller: 2-line subtext needs the room) -->
+  <rect x="444" y="684" width="140" height="52" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
+  <text x="514" y="700" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">api/main.py</text>
+  <text x="514" y="715" text-anchor="middle" font-size="10" fill="#993c1d">FastAPI /health /sync</text>
+  <text x="514" y="728" text-anchor="middle" font-size="10" fill="#993c1d">/query /reload /ingest</text>
 
-  <rect x="592" y="688" width="154" height="44" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
-  <text x="669" y="705" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">sync_zotero.py</text>
-  <text x="669" y="721" text-anchor="middle" font-size="10" fill="#993c1d">Zotero → /ingest</text>
+  <rect x="592" y="684" width="154" height="52" rx="6" fill="#f0997b" stroke="#993c1d" stroke-width="0.75"/>
+  <text x="669" y="703" text-anchor="middle" font-size="12" font-weight="600" fill="#712b13">sync_zotero.py</text>
+  <text x="669" y="719" text-anchor="middle" font-size="10" fill="#993c1d">Zotero → /ingest</text>
 
   <!-- ════ INTER-LAYER ARROWS ════ -->
 
@@ -202,49 +203,60 @@
   <text x="55" y="754" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">TESTS</text>
   <rect x="40" y="762" width="720" height="50" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
   <text x="210" y="780" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">tests/</text>
-  <text x="210" y="796" text-anchor="middle" font-size="11" fill="#5f5e5a">pytest · 7 unit modules · 53 tests · ST + Anthropic mocked</text>
+  <text x="210" y="796" text-anchor="middle" font-size="11" fill="#5f5e5a">pytest · 8 unit modules · 57 tests · ST + Anthropic mocked</text>
   <text x="600" y="780" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">test_integration.py</text>
   <text x="600" y="796" text-anchor="middle" font-size="11" fill="#5f5e5a">parse → chunk → filter → embed → FAISS → search</text>
 
-  <!-- CONFIG / ENV BAR  y=832..876 -->
-  <text x="55" y="824" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">CONFIG / ENV</text>
+  <!-- CI → TESTS: CI runs the suite; 20px gap between the two bars -->
+  <line x1="400" y1="832" x2="400" y2="814" stroke="#5f5e5a" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- CI BAR  y=832..876 -->
+  <text x="55" y="824" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">CI</text>
   <rect x="40" y="832" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
-  <text x="220" y="849" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">.env / .env.example</text>
-  <text x="220" y="865" text-anchor="middle" font-size="11" fill="#5f5e5a">23 env vars, source of truth</text>
-  <text x="580" y="849" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">pixi.toml</text>
-  <text x="580" y="865" text-anchor="middle" font-size="11" fill="#5f5e5a">tasks, deps, features</text>
-  <path d="M760 832 L769 832 L769 62 L400 62 L400 60" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+  <text x="220" y="849" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">.github/workflows/tests.yml</text>
+  <text x="220" y="865" text-anchor="middle" font-size="11" fill="#5f5e5a">unit + integration jobs · ubuntu-latest · setup-pixi</text>
+  <text x="580" y="849" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">GitHub Actions</text>
+  <text x="580" y="865" text-anchor="middle" font-size="11" fill="#5f5e5a">on PR + push to main · no secrets needed</text>
 
-  <!-- DOCS BAR  y=896..940 -->
-  <text x="55" y="888" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">DOCUMENTATION</text>
+  <!-- CONFIG / ENV BAR  y=896..940 -->
+  <text x="55" y="888" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">CONFIG / ENV</text>
   <rect x="40" y="896" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
-  <text x="210" y="913" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">docs/</text>
-  <text x="210" y="929" text-anchor="middle" font-size="11" fill="#5f5e5a">Sphinx + Shibuya, conf.py, usage.rst, modules/</text>
-  <text x="600" y="913" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">README.md</text>
-  <text x="600" y="929" text-anchor="middle" font-size="11" fill="#5f5e5a">GitHub portfolio docs</text>
+  <text x="220" y="913" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">.env / .env.example</text>
+  <text x="220" y="929" text-anchor="middle" font-size="11" fill="#5f5e5a">23 env vars, source of truth</text>
+  <text x="580" y="913" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">pixi.toml</text>
+  <text x="580" y="929" text-anchor="middle" font-size="11" fill="#5f5e5a">tasks, deps, features</text>
+  <path d="M760 896 L769 896 L769 62 L400 62 L400 60" fill="none" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3" marker-end="url(#arr)"/>
 
-  <!-- AUTOMATION BAR  y=960..1004 -->
-  <text x="55" y="952" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">AUTOMATION / BACKGROUND SERVICES</text>
+  <!-- DOCS BAR  y=960..1004 -->
+  <text x="55" y="952" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">DOCUMENTATION</text>
   <rect x="40" y="960" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
-  <text x="215" y="977" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">launchd (LaunchAgents/)</text>
-  <text x="215" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">api.plist + n8n.plist · starts on login · KeepAlive</text>
-  <text x="575" y="977" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">integrations/n8n/zotero_sync.json</text>
-  <text x="575" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">Schedule Trigger daily 6pm → POST /sync</text>
+  <text x="210" y="977" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">docs/</text>
+  <text x="210" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">Sphinx + Shibuya, conf.py, usage.rst, modules/</text>
+  <text x="600" y="977" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">README.md</text>
+  <text x="600" y="993" text-anchor="middle" font-size="11" fill="#5f5e5a">GitHub portfolio docs</text>
+
+  <!-- AUTOMATION BAR  y=1024..1068 -->
+  <text x="55" y="1016" font-size="10" fill="#888780" font-weight="500" letter-spacing="0.5">AUTOMATION / BACKGROUND SERVICES</text>
+  <rect x="40" y="1024" width="720" height="44" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.75"/>
+  <text x="215" y="1041" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">launchd (LaunchAgents/)</text>
+  <text x="215" y="1057" text-anchor="middle" font-size="11" fill="#5f5e5a">api.plist + n8n.plist · starts on login · KeepAlive</text>
+  <text x="575" y="1041" text-anchor="middle" font-size="12" font-weight="600" fill="#444441">integrations/n8n/zotero_sync.json</text>
+  <text x="575" y="1057" text-anchor="middle" font-size="11" fill="#5f5e5a">Schedule Trigger daily 6pm → POST /sync</text>
 
   <!-- LEGEND -->
-  <rect x="40" y="1022" width="10" height="10" rx="2" fill="#1D9E75"/>
-  <text x="56" y="1031" font-size="10" fill="#444441">ingestion</text>
-  <rect x="125" y="1022" width="10" height="10" rx="2" fill="#7F77DD"/>
-  <text x="141" y="1031" font-size="10" fill="#444441">retrieval</text>
-  <rect x="210" y="1022" width="10" height="10" rx="2" fill="#378ADD"/>
-  <text x="226" y="1031" font-size="10" fill="#444441">generation</text>
-  <rect x="315" y="1022" width="10" height="10" rx="2" fill="#BA7517"/>
-  <text x="331" y="1031" font-size="10" fill="#444441">evaluation</text>
-  <rect x="415" y="1022" width="10" height="10" rx="2" fill="#D85A30"/>
-  <text x="431" y="1031" font-size="10" fill="#444441">scripts</text>
-  <rect x="482" y="1022" width="10" height="10" rx="2" fill="#888780"/>
-  <text x="498" y="1031" font-size="10" fill="#444441">config / infra</text>
-  <line x1="590" y1="1027" x2="614" y2="1027" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3"/>
-  <text x="620" y="1031" font-size="10" fill="#444441">reads config</text>
+  <rect x="40" y="1086" width="10" height="10" rx="2" fill="#1D9E75"/>
+  <text x="56" y="1095" font-size="10" fill="#444441">ingestion</text>
+  <rect x="125" y="1086" width="10" height="10" rx="2" fill="#7F77DD"/>
+  <text x="141" y="1095" font-size="10" fill="#444441">retrieval</text>
+  <rect x="210" y="1086" width="10" height="10" rx="2" fill="#378ADD"/>
+  <text x="226" y="1095" font-size="10" fill="#444441">generation</text>
+  <rect x="315" y="1086" width="10" height="10" rx="2" fill="#BA7517"/>
+  <text x="331" y="1095" font-size="10" fill="#444441">evaluation</text>
+  <rect x="415" y="1086" width="10" height="10" rx="2" fill="#D85A30"/>
+  <text x="431" y="1095" font-size="10" fill="#444441">scripts</text>
+  <rect x="482" y="1086" width="10" height="10" rx="2" fill="#888780"/>
+  <text x="498" y="1095" font-size="10" fill="#444441">config / infra</text>
+  <line x1="590" y1="1091" x2="614" y2="1091" stroke="#b4b2a9" stroke-width="0.75" stroke-dasharray="4 3"/>
+  <text x="620" y="1095" font-size="10" fill="#444441">reads config</text>
 
 </svg>
