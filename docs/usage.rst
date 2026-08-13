@@ -376,3 +376,26 @@ view the result.
 
    The ``docs`` task is only available in the ``docs`` environment and must be
    invoked with ``pixi run -e docs docs``.
+
+Continuous integration
+^^^^^^^^^^^^^^^^^^^^^^
+
+``.github/workflows/tests.yml`` runs the same two pixi tasks on GitHub Actions:
+``unit`` (``pixi run test``) and ``integration`` (``pixi run test-all``), as
+parallel ``ubuntu-latest`` jobs that install the environment with
+``prefix-dev/setup-pixi`` and its build cache. The workflow triggers on every
+pull request and on pushes to ``main``, filtered to changes under ``src/`` or
+``tests/`` and to the pixi manifests.
+
+No repository secrets are configured. ``sentence_transformers`` and
+``anthropic.Anthropic`` are patched in the tests, and every field on
+``Settings`` has a default (including ``anthropic_api_key``), so the suite
+imports and runs on a clean runner with no ``.env`` file and no API key. Adding
+a test that performs real network or API calls would break this and require
+``ANTHROPIC_API_KEY`` to be wired in as a secret.
+
+.. note::
+
+   ``linux-64`` is present in ``pixi.toml``'s ``platforms`` solely for these
+   runners. Removing it — or leaving ``pixi.lock`` unresolved for it — breaks
+   every CI run.

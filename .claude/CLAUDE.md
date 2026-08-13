@@ -23,11 +23,13 @@ RAG system for querying ~600 academic PDFs. Learning project — build with unde
 | Config | `src/config.py` | Single `settings` singleton, 23 typed fields |
 | Evaluation | `src/evaluation/` | Retrieval metrics + Claude-as-judge faithfulness |
 | Scripts | `scripts/` | `query_assistant.py`, `ingest_papers.py`, `run_evaluation.py` |
+| CI | `.github/workflows/tests.yml` | `unit` + `integration` jobs on `ubuntu-latest` via setup-pixi; no secrets — all external clients mocked |
 
 ## Key Constraints & Gotchas
 
 - **OMP_NUM_THREADS=1**: must be set before PyTorch imports on this machine (OpenMP bug, PyTorch 2.2.x). Already handled in scripts — don't remove it.
 - **FAISS flat index**: `IndexFlatIP` is correct at ~26K vectors. Do not suggest IVF.
+- **`linux-64` in `pixi.toml` platforms**: only there for the CI runners — this machine never uses it. Removing it breaks every workflow run; keep `pixi.lock` resolved for it.
 - **Vectors normalised twice**: `faiss.normalize_L2()` called at write and query time. `all-mpnet-base-v2` already outputs unit vectors; this is a safety net — leave it.
 - **Query decomposition is OFF** (`QUERY_DECOMPOSITION=false`). It made retrieval *worse* because `math.ceil(top_k / n_sub)` starves each sub-question. Don't re-enable without fixing the budget logic first.
 - **Ollama timeout**: `timeout=(10, None)` — 10s connect, no read timeout. Required for slow CPU prefill.
@@ -40,10 +42,6 @@ RAG system for querying ~600 academic PDFs. Learning project — build with unde
 - Comments explain *why*, not *what*.
 - Short, composable functions over monolithic blocks.
 - Typing throughout.
-
-## What's Missing (next steps)
-
-1. Pytest suite (`tests/` — generated but not verified)
 
 ## Do Not
 
