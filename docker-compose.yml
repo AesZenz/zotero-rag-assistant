@@ -1,0 +1,42 @@
+# Phase 1 of dockerizing zotero-rag-assistant: n8n only.
+#
+# The FastAPI service (api/main.py) is still native and supervised by launchd.
+# It is deliberately NOT in this file yet -- doing n8n alone first means a
+# mistake here cannot take down the actual RAG pipeline. See Known Issues in
+# README.md for the follow-up phase.
+
+services:
+  n8n:
+    # Pinned to 2.8.4 to match the native install this replaces (`n8n --version`).
+    # Containerizing and upgrading at the same time would make it impossible to
+    # tell which one broke the workflow. Upgrade later as its own change.
+    image: n8nio/n8n:2.8.4
+    container_name: zotero-rag-n8n
+
+    # Replaces the KeepAlive=true of com.zotero-rag.n8n.plist: Docker restarts
+    # the container if it crashes and on boot, but NOT if it was stopped by hand.
+    restart: unless-stopped
+
+    ports:
+      # Same port the native install used, so bookmarks and the editor UI at
+      # http://localhost:5678 keep working unchanged.
+      - "5678:5678"
+
+    environment:
+      # Containers default to UTC. The Schedule Trigger fires on the container's
+      # clock, so without these the "daily 6pm" run would silently happen at
+      # 6pm UTC -- an hour or two off local, depending on DST.
+      # TZ sets the OS clock; GENERIC_TIMEZONE is what n8n's own scheduler reads.
+      # Both are needed, and both must match the Mac (Europe/Vienna).
+      - TZ=Europe/Vienna
+      - GENERIC_TIMEZONE=Europe/Vienna
+
+    volumes:
+      # Bind-mounts the REAL host data dir, not a fresh named volume: it holds
+      # the live "Zotero Sync" workflow, execution history, and the encryption
+      # key in ~/.n8n/config. A named volume would start empty.
+      # /home/node/.n8n is the image's data path (it runs as the `node` user).
+      # ${HOME} rather than ~ -- tilde expansion in compose volume paths is
+      # inconsistent across versions; this is unambiguous.
+      # Nothing under this path is ever committed: it is a host reference only.
+      - ${HOME}/.n8n:/home/node/.n8n

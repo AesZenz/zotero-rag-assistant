@@ -3,6 +3,21 @@
   "nodes": [
     {
       "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8000/sync",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "599e0166-01a9-473b-81bf-9b689c7fca89",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
         "rule": {
           "interval": [
             {
@@ -19,27 +34,12 @@
         0
       ],
       "id": "4dc83092-87ab-4365-b892-761035d633ea",
-      "name": "Schedule Trigger"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://127.0.0.1:8000/sync",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        208,
-        0
-      ],
-      "id": "599e0166-01a9-473b-81bf-9b689c7fca89",
-      "name": "HTTP Request"
+      "name": "Daily 6pm zotero papers ingestion trigger"
     }
   ],
   "pinData": {},
   "connections": {
-    "Schedule Trigger": {
+    "Daily 6pm zotero papers ingestion trigger": {
       "main": [
         [
           {
@@ -57,10 +57,10 @@
     "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
-    "timezone": "Europe/Budapest",
+    "timezone": "Europe/Vienna",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "874d37fb-95c3-4322-aa30-712e648efa4f",
+  "versionId": "38bbabda-c4a2-4348-8f2e-d75203e146b3",
   "meta": {
     "instanceId": "cb073b28d1e2a597bcced8c1bf4c8e04b1265c44350b32fad9c89971ef1ea528"
   },

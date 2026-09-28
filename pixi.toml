@@ -87,7 +87,7 @@ test-chunker = "PYTHONPATH=. python scripts/test_chunker.py"
 test-embedder = "PYTHONPATH=. python scripts/test_embedder.py"
 test-vector-store = "PYTHONPATH=. python scripts/test_vector_store.py"
 notebook = "jupyter lab notebooks/"
-api = "PYTHONPATH=. uvicorn api.main:app --reload"
+api = "PYTHONPATH=. uvicorn api.main:app --reload --host 0.0.0.0"
 sync-zotero = "PYTHONPATH=. python scripts/sync_zotero.py"
 check = { depends-on = ["format", "lint", "test"] }
 
