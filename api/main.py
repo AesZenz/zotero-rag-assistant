@@ -32,6 +32,19 @@ def _index_path() -> str:
     return str(Path(settings.data_dir) / "paper_index.faiss")
 
 
+def _child_log() -> Any:
+    """Open the capture file for a spawned script's stdout/stderr.
+
+    The scripts configure their own log files, but that only starts once they
+    import successfully. Anything earlier — a bad interpreter path, an import
+    error, a traceback on startup — would vanish if the stream went to DEVNULL,
+    leaving a failed run indistinguishable from a successful one.
+    """
+    path = Path("logs/api_subprocess.log")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return open(path, "a", encoding="utf-8")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.store = FAISSVectorStore.load(_index_path())
@@ -65,12 +78,14 @@ async def health():
 async def ingest():
     # Fire-and-forget: embed run can take minutes on CPU; caller gets a response immediately.
     env = {**os.environ, "PYTHONPATH": "."}
-    subprocess.Popen(
-        [sys.executable, "scripts/ingest_papers.py", "--resume"],
-        env=env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    # The parent's handle is closed straight after Popen; the child keeps its own.
+    with _child_log() as log:
+        subprocess.Popen(
+            [sys.executable, "scripts/ingest_papers.py", "--resume"],
+            env=env,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+        )
     return {"status": "started"}
 
 
@@ -78,12 +93,13 @@ async def ingest():
 async def sync():
     # Runs sync_zotero.py, which copies new PDFs then internally POSTs to /ingest.
     env = {**os.environ, "PYTHONPATH": "."}
-    subprocess.Popen(
-        [sys.executable, "scripts/sync_zotero.py"],
-        env=env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    with _child_log() as log:
+        subprocess.Popen(
+            [sys.executable, "scripts/sync_zotero.py"],
+            env=env,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+        )
     return {"status": "started"}
 
 

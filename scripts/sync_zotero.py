@@ -13,9 +13,18 @@ import sqlite3
 import sys
 from pathlib import Path
 
-import requests
+# Must be set before any src imports: src.utils.logging reads LOG_FILE at import time.
+# Without a log file this script is invisible when the API runs it as a detached
+# subprocess — its output goes nowhere and a failed sync looks identical to a good one.
+os.environ["LOG_FILE"] = "logs/sync.log"
 
-from src.config import settings
+# Import after env setup so Settings() picks up the LOG_FILE override above.
+import requests  # noqa: E402
+
+from src.config import settings  # noqa: E402
+from src.utils.logging import get_logger  # noqa: E402
+
+logger = get_logger(__name__)
 
 # Collection to sync — can be made configurable later
 _COLLECTION = "Psy/Neuroscience/AI"
@@ -42,7 +51,7 @@ AND c.collectionID IN (
 
 def main() -> None:
     if not settings.pdf_library_path:
-        print("Error: PDF_LIBRARY_PATH is not set in .env", file=sys.stderr)
+        logger.error("PDF_LIBRARY_PATH is not set in .env")
         sys.exit(1)
 
     db_path = os.path.expanduser("~/Zotero/zotero.sqlite")
@@ -56,7 +65,7 @@ def main() -> None:
     finally:
         conn.close()
 
-    print(f"Found {len(rows)} PDF attachment(s) in '{_COLLECTION}'.")
+    logger.info("Found %d PDF attachment(s) in '%s'.", len(rows), _COLLECTION)
 
     new_count = 0
     copied = 0
@@ -71,12 +80,12 @@ def main() -> None:
         src = zotero_storage / key / filename
 
         if not src.exists():
-            print(f"  WARN: source not found — {src}")
+            logger.warning("Source not found — %s", src)
             continue
 
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
-        print(f"  Copied: {filename} → {dest.parent}/")
+        logger.info("Copied: %s → %s/", filename, dest.parent)
         copied += 1
 
     ingest_triggered = False
@@ -85,11 +94,13 @@ def main() -> None:
             requests.post("http://localhost:8000/ingest", timeout=5)
             ingest_triggered = True
         except requests.RequestException as exc:
-            print(f"WARN: /ingest POST failed: {exc}", file=sys.stderr)
+            logger.warning("/ingest POST failed: %s", exc)
 
-    print(
-        f"\nNew PDFs found: {new_count}  |  Copied: {copied}  |  "
-        f"Ingest triggered: {ingest_triggered}"
+    logger.info(
+        "New PDFs found: %d  |  Copied: %d  |  Ingest triggered: %s",
+        new_count,
+        copied,
+        ingest_triggered,
     )
 
 
