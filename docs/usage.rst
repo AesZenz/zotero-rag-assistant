@@ -20,6 +20,21 @@ Starts a FastAPI + Uvicorn server at ``http://localhost:8000``. All heavy
 resources (vector store, embedder, generator) are loaded once at startup via
 FastAPI's lifespan mechanism.
 
+The task binds ``--host 0.0.0.0`` rather than the uvicorn default of
+``127.0.0.1``. This is required for the containerised n8n service: a container
+has its own loopback, so n8n reaching the host via ``host.docker.internal``
+arrives on the Mac's gateway address, which a loopback-bound server refuses.
+The cost is that the server is reachable from the local network and has no
+authentication — see Known Limitations in ``README.md``.
+
+Because the server is supervised by launchd, changing this task's flags
+requires restarting the service; ``--reload`` only watches Python files and
+will not re-bind a socket:
+
+.. code-block:: bash
+
+   launchctl kickstart -k gui/$(id -u)/com.zotero-rag.api
+
 **Endpoints:**
 
 .. list-table::
@@ -78,8 +93,14 @@ and then POSTs to ``http://localhost:8000/ingest`` if new PDFs were copied.
 
 **Prerequisites:** ``PDF_LIBRARY_PATH`` set in ``.env``. For automatic
 re-ingestion, the API server (``pixi run api``) must be running before this
-task is invoked — if not reachable, the sync still copies files but prints a
+task is invoked — if not reachable, the sync still copies files but logs a
 warning instead of failing.
+
+**Logging:** writes to ``logs/sync.log`` as well as the console. When the API
+triggers this script via ``POST /sync`` it runs detached, so that file is the
+only record of what happened — including attachments listed in Zotero's
+database whose PDF is missing from local storage, which are skipped with a
+warning.
 
 ----
 

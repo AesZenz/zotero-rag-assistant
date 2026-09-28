@@ -218,24 +218,44 @@ pixi run test-cov
 
 ## Background Services
 
-The API server and n8n are both configured as launchd user agents so they start automatically on login and restart if they crash.
+The API server runs as a launchd user agent; n8n runs as a Docker Compose service. Both start on their own and come back after a crash.
 
 ### n8n workflow automation
 
-An n8n workflow (`integrations/n8n/zotero_sync.json`) runs daily at 6pm and POSTs to `http://127.0.0.1:8000/sync`, triggering the full Zotero → PDF copy → re-index pipeline with no manual intervention. To view or edit the workflow, open the n8n editor at `http://localhost:5678`.
+An n8n workflow (`integrations/n8n/zotero_sync.json`) runs daily at 6pm and POSTs to `http://host.docker.internal:8000/sync`, triggering the full Zotero → PDF copy → re-index pipeline with no manual intervention. To view or edit the workflow, open the n8n editor at `http://localhost:5678`.
 
-To import the workflow into a fresh n8n instance: open the editor → **Workflows** → **Import from file** → select `integrations/n8n/zotero_sync.json`.
+n8n is defined in `docker-compose.yml` (image pinned to `n8nio/n8n:2.8.4`, bind-mounting the real `~/.n8n`):
 
-### Managing launchd services
+```bash
+docker compose up -d      # start
+docker compose ps         # status
+docker compose logs -f n8n
+docker compose down       # stop
+```
+
+`restart: unless-stopped` brings the container back after a crash and when Docker Desktop starts — but **Docker Desktop itself must be set to open at login**, or the 6pm trigger never fires.
+
+Two things that trip people up:
+
+- **`host.docker.internal`, not `127.0.0.1`.** A container has its own loopback, so `127.0.0.1` from inside n8n means the container, not the Mac. This is also why the `api` pixi task binds `0.0.0.0` (see [Known Limitations](#known-limitations)).
+- **The repo file is an export, not the live workflow.** What executes lives in `~/.n8n/database.sqlite`. Editing `integrations/n8n/zotero_sync.json` does not change the running workflow, and vice versa. After editing in the editor, re-export with **⋯ → Download** and replace the repo copy. To load the repo copy into a fresh n8n: **Workflows → Import from file**.
+
+### Managing the launchd service
 
 | Service | plist | Disable | Re-enable |
 |---|---|---|---|
 | FastAPI server | `com.zotero-rag.api.plist` | `launchctl unload ~/Library/LaunchAgents/com.zotero-rag.api.plist` | `launchctl load ~/Library/LaunchAgents/com.zotero-rag.api.plist` |
-| n8n | `com.zotero-rag.n8n.plist` | `launchctl unload ~/Library/LaunchAgents/com.zotero-rag.n8n.plist` | `launchctl load ~/Library/LaunchAgents/com.zotero-rag.n8n.plist` |
+
+To apply a change to the `api` pixi task, restart the service — `uvicorn --reload` watches Python files and will not pick up new command-line flags:
+
+```bash
+launchctl kickstart -k gui/$(id -u)/com.zotero-rag.api
+```
 
 Logs are written to `~/Library/Logs/`:
 - `zotero-rag-api.stdout.log` / `zotero-rag-api.stderr.log`
-- `zotero-rag-n8n.stdout.log` / `zotero-rag-n8n.stderr.log`
+
+n8n no longer has a plist — its logs come from `docker compose logs n8n`.
 
 ---
 
@@ -249,3 +269,5 @@ Logs are written to `~/Library/Logs/`:
 ## Known Limitations
 
 - HTML web snapshots in Zotero exports are silently skipped (PDF parser only)
+- **The API listens on all interfaces with no authentication.** The `api` task binds `0.0.0.0` so the n8n container can reach it, which also makes it reachable from anything on the local network: `/query` spends Anthropic credits under the configured key, and `/sync` / `/ingest` pin this CPU-only machine. It is not internet-exposed (router NAT), and containerising the api removes the LAN listener entirely — see Known Issues / Tech Debt in `PROJECT_STATUS.md`.
+- **A green n8n execution does not prove the sync ran.** `/sync` and `/ingest` start their work in a detached subprocess and return immediately, so n8n records success the moment the process is spawned — it never learns the outcome. This is deliberate (embedding takes ~18 minutes; waiting would time out the request), but it means the workflow cannot report failure. The output is at least kept now: `logs/sync.log`, `logs/ingestion.log`, and `logs/api_subprocess.log` for anything that dies before logging starts.
